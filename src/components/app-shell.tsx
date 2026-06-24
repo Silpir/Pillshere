@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-2 font-semibold">
             <Pill className="h-5 w-5 text-primary" />
-            <span>MedTrack</span>
+            <span>Prozume</span>
           </Link>
           <nav className="flex items-center gap-1">
             <NavLink to="/">Today</NavLink>

@@ -28,9 +28,9 @@ import type { Medication } from "@/lib/medications/types";
 export const Route = createFileRoute("/meds/")({
   head: () => ({
     meta: [
-      { title: "Medications — MedTrack" },
+      { title: "Medications — Prozume" },
       { name: "description", content: "Manage your medications, schedules, and pill supply." },
-      { property: "og:title", content: "Medications — MedTrack" },
+      { property: "og:title", content: "Medications — Prozume" },
       { property: "og:description", content: "Manage your medications, schedules, and pill supply." },
     ],
   }),

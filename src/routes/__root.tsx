@@ -78,10 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MedTrack — Medication reminders" },
+      { title: "Prozume — Medication reminders" },
       { name: "description", content: "Lightweight medication reminder & adherence tracker with pill supply and refill alerts." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "MedTrack — Medication reminders" },
+      { property: "og:title", content: "Prozume — Medication reminders" },
       { property: "og:description", content: "Lightweight medication reminder & adherence tracker with pill supply and refill alerts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

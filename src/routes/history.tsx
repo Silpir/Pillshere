@@ -33,9 +33,9 @@ import { scheduledTimesForDay } from "@/lib/medications/schedule";
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "History & stats — MedTrack" },
+      { title: "History & stats — Prozume" },
       { name: "description", content: "Dose history, adherence, streaks, and refill log." },
-      { property: "og:title", content: "History & stats — MedTrack" },
+      { property: "og:title", content: "History & stats — Prozume" },
       { property: "og:description", content: "Dose history, adherence, streaks, and refill log." },
     ],
   }),
@@ -120,7 +120,7 @@ function HistoryPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `medtrack-${format(now, "yyyy-MM-dd")}.json`;
+    a.download = `prozume-${format(now, "yyyy-MM-dd")}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";

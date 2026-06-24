@@ -13,6 +13,7 @@ import { Route as MedsRouteImport } from './routes/meds'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedsIndexRouteImport } from './routes/meds.index'
 import { Route as MedsNewRouteImport } from './routes/meds.new'
+import { Route as MedsIdEditRouteImport } from './routes/meds.$id.edit'
 
 const MedsRoute = MedsRouteImport.update({
   id: '/meds',
@@ -34,17 +35,24 @@ const MedsNewRoute = MedsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => MedsRoute,
 } as any)
+const MedsIdEditRoute = MedsIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => MedsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/meds': typeof MedsRouteWithChildren
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
+  '/meds/$id/edit': typeof MedsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/meds/new': typeof MedsNewRoute
   '/meds': typeof MedsIndexRoute
+  '/meds/$id/edit': typeof MedsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -52,13 +60,14 @@ export interface FileRoutesById {
   '/meds': typeof MedsRouteWithChildren
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
+  '/meds/$id/edit': typeof MedsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/meds' | '/meds/new' | '/meds/'
+  fullPaths: '/' | '/meds' | '/meds/new' | '/meds/' | '/meds/$id/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/meds/new' | '/meds'
-  id: '__root__' | '/' | '/meds' | '/meds/new' | '/meds/'
+  to: '/' | '/meds/new' | '/meds' | '/meds/$id/edit'
+  id: '__root__' | '/' | '/meds' | '/meds/new' | '/meds/' | '/meds/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -96,17 +105,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedsNewRouteImport
       parentRoute: typeof MedsRoute
     }
+    '/meds/$id/edit': {
+      id: '/meds/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/meds/$id/edit'
+      preLoaderRoute: typeof MedsIdEditRouteImport
+      parentRoute: typeof MedsRoute
+    }
   }
 }
 
 interface MedsRouteChildren {
   MedsNewRoute: typeof MedsNewRoute
   MedsIndexRoute: typeof MedsIndexRoute
+  MedsIdEditRoute: typeof MedsIdEditRoute
 }
 
 const MedsRouteChildren: MedsRouteChildren = {
   MedsNewRoute: MedsNewRoute,
   MedsIndexRoute: MedsIndexRoute,
+  MedsIdEditRoute: MedsIdEditRoute,
 }
 
 const MedsRouteWithChildren = MedsRoute._addFileChildren(MedsRouteChildren)

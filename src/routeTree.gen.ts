@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as MedsRouteImport } from './routes/meds'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedsIndexRouteImport } from './routes/meds.index'
+import { Route as MedsNewRouteImport } from './routes/meds.new'
 
 const MedsRoute = MedsRouteImport.update({
   id: '/meds',
@@ -28,28 +29,36 @@ const MedsIndexRoute = MedsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MedsRoute,
 } as any)
+const MedsNewRoute = MedsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => MedsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/meds': typeof MedsRouteWithChildren
+  '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/meds/new': typeof MedsNewRoute
   '/meds': typeof MedsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/meds': typeof MedsRouteWithChildren
+  '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/meds' | '/meds/'
+  fullPaths: '/' | '/meds' | '/meds/new' | '/meds/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/meds'
-  id: '__root__' | '/' | '/meds' | '/meds/'
+  to: '/' | '/meds/new' | '/meds'
+  id: '__root__' | '/' | '/meds' | '/meds/new' | '/meds/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,14 +89,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedsIndexRouteImport
       parentRoute: typeof MedsRoute
     }
+    '/meds/new': {
+      id: '/meds/new'
+      path: '/new'
+      fullPath: '/meds/new'
+      preLoaderRoute: typeof MedsNewRouteImport
+      parentRoute: typeof MedsRoute
+    }
   }
 }
 
 interface MedsRouteChildren {
+  MedsNewRoute: typeof MedsNewRoute
   MedsIndexRoute: typeof MedsIndexRoute
 }
 
 const MedsRouteChildren: MedsRouteChildren = {
+  MedsNewRoute: MedsNewRoute,
   MedsIndexRoute: MedsIndexRoute,
 }
 

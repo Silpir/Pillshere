@@ -9,38 +9,111 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MedsRouteImport } from './routes/meds'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MedsIndexRouteImport } from './routes/meds.index'
+import { Route as MedsNewRouteImport } from './routes/meds.new'
+import { Route as MedsIdEditRouteImport } from './routes/meds.$id.edit'
 
+const MedsRoute = MedsRouteImport.update({
+  id: '/meds',
+  path: '/meds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MedsIndexRoute = MedsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MedsRoute,
+} as any)
+const MedsNewRoute = MedsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => MedsRoute,
+} as any)
+const MedsIdEditRoute = MedsIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => MedsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/meds': typeof MedsRouteWithChildren
+  '/meds/new': typeof MedsNewRoute
+  '/meds/': typeof MedsIndexRoute
+  '/meds/$id/edit': typeof MedsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/meds/new': typeof MedsNewRoute
+  '/meds': typeof MedsIndexRoute
+  '/meds/$id/edit': typeof MedsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/meds': typeof MedsRouteWithChildren
+  '/meds/new': typeof MedsNewRoute
+  '/meds/': typeof MedsIndexRoute
+  '/meds/$id/edit': typeof MedsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/history'
+    | '/meds'
+    | '/meds/new'
+    | '/meds/'
+    | '/meds/$id/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/history' | '/meds/new' | '/meds' | '/meds/$id/edit'
+  id:
+    | '__root__'
+    | '/'
+    | '/history'
+    | '/meds'
+    | '/meds/new'
+    | '/meds/'
+    | '/meds/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HistoryRoute: typeof HistoryRoute
+  MedsRoute: typeof MedsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/meds': {
+      id: '/meds'
+      path: '/meds'
+      fullPath: '/meds'
+      preLoaderRoute: typeof MedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +121,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meds/': {
+      id: '/meds/'
+      path: '/'
+      fullPath: '/meds/'
+      preLoaderRoute: typeof MedsIndexRouteImport
+      parentRoute: typeof MedsRoute
+    }
+    '/meds/new': {
+      id: '/meds/new'
+      path: '/new'
+      fullPath: '/meds/new'
+      preLoaderRoute: typeof MedsNewRouteImport
+      parentRoute: typeof MedsRoute
+    }
+    '/meds/$id/edit': {
+      id: '/meds/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/meds/$id/edit'
+      preLoaderRoute: typeof MedsIdEditRouteImport
+      parentRoute: typeof MedsRoute
+    }
   }
 }
 
+interface MedsRouteChildren {
+  MedsNewRoute: typeof MedsNewRoute
+  MedsIndexRoute: typeof MedsIndexRoute
+  MedsIdEditRoute: typeof MedsIdEditRoute
+}
+
+const MedsRouteChildren: MedsRouteChildren = {
+  MedsNewRoute: MedsNewRoute,
+  MedsIndexRoute: MedsIndexRoute,
+  MedsIdEditRoute: MedsIdEditRoute,
+}
+
+const MedsRouteWithChildren = MedsRoute._addFileChildren(MedsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HistoryRoute: HistoryRoute,
+  MedsRoute: MedsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

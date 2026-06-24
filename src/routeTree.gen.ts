@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MedsRouteImport } from './routes/meds'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MedsIndexRouteImport } from './routes/meds.index'
 
 const MedsRoute = MedsRouteImport.update({
   id: '/meds',
@@ -22,31 +23,38 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MedsIndexRoute = MedsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MedsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/meds': typeof MedsRoute
+  '/meds': typeof MedsRouteWithChildren
+  '/meds/': typeof MedsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/meds': typeof MedsRoute
+  '/meds': typeof MedsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/meds': typeof MedsRoute
+  '/meds': typeof MedsRouteWithChildren
+  '/meds/': typeof MedsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/meds'
+  fullPaths: '/' | '/meds' | '/meds/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/meds'
-  id: '__root__' | '/' | '/meds'
+  id: '__root__' | '/' | '/meds' | '/meds/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  MedsRoute: typeof MedsRoute
+  MedsRoute: typeof MedsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +73,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meds/': {
+      id: '/meds/'
+      path: '/'
+      fullPath: '/meds/'
+      preLoaderRoute: typeof MedsIndexRouteImport
+      parentRoute: typeof MedsRoute
+    }
   }
 }
 
+interface MedsRouteChildren {
+  MedsIndexRoute: typeof MedsIndexRoute
+}
+
+const MedsRouteChildren: MedsRouteChildren = {
+  MedsIndexRoute: MedsIndexRoute,
+}
+
+const MedsRouteWithChildren = MedsRoute._addFileChildren(MedsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  MedsRoute: MedsRoute,
+  MedsRoute: MedsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

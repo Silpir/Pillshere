@@ -24,6 +24,7 @@ import {
   isLowSupply,
 } from "@/lib/medications/schedule";
 import type { Medication } from "@/lib/medications/types";
+import { refillSchema, adjustPillsSchema } from "@/lib/medications/schemas";
 
 export const Route = createFileRoute("/meds/")({
   head: () => ({
@@ -195,24 +196,26 @@ function MedCard({
 
 function RefillDialog({ med, onClose }: { med: Medication | null; onClose: () => void }) {
   const [qty, setQty] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const open = !!med;
   if (med && qty === "") {
     setTimeout(() => setQty(String(med.supply.originalQty)), 0);
   }
   function submit() {
     if (!med) return;
-    const n = Number(qty);
-    if (!Number.isFinite(n) || n <= 0) {
-      toast.error("Enter a positive number");
+    const parsed = refillSchema.safeParse({ pillsAdded: Number(qty) });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
-    actions.recordRefill({ medId: med.id, pillsAdded: n });
-    toast.success(`Added ${n} pills to ${med.name}`);
+    setError(null);
+    actions.recordRefill({ medId: med.id, pillsAdded: parsed.data.pillsAdded });
+    toast.success(`Added ${parsed.data.pillsAdded} pills to ${med.name}`);
     setQty("");
     onClose();
   }
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { setQty(""); onClose(); } }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { setQty(""); setError(null); onClose(); } }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Record refill</DialogTitle>
@@ -222,10 +225,11 @@ function RefillDialog({ med, onClose }: { med: Medication | null; onClose: () =>
         </DialogHeader>
         <div>
           <Label htmlFor="qty">Pills added</Label>
-          <Input id="qty" type="number" min="1" value={qty} onChange={(e) => setQty(e.target.value)} />
+          <Input id="qty" type="number" min="1" max="10000" step="1" inputMode="numeric" value={qty} onChange={(e) => setQty(e.target.value)} />
+          {error && <p className="text-xs text-destructive mt-1">{error}</p>}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => { setQty(""); onClose(); }}>Cancel</Button>
+          <Button variant="outline" onClick={() => { setQty(""); setError(null); onClose(); }}>Cancel</Button>
           <Button onClick={submit}>Save refill</Button>
         </DialogFooter>
       </DialogContent>
@@ -235,24 +239,26 @@ function RefillDialog({ med, onClose }: { med: Medication | null; onClose: () =>
 
 function AdjustDialog({ med, onClose }: { med: Medication | null; onClose: () => void }) {
   const [val, setVal] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const open = !!med;
   if (med && val === "") {
     setTimeout(() => setVal(String(med.supply.currentPills)), 0);
   }
   function submit() {
     if (!med) return;
-    const n = Number(val);
-    if (!Number.isFinite(n) || n < 0) {
-      toast.error("Enter a non-negative number");
+    const parsed = adjustPillsSchema.safeParse({ currentPills: Number(val) });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
-    actions.adjustPillCount(med.id, n);
+    setError(null);
+    actions.adjustPillCount(med.id, parsed.data.currentPills);
     toast.success(`Updated ${med.name} count`);
     setVal("");
     onClose();
   }
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { setVal(""); onClose(); } }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { setVal(""); setError(null); onClose(); } }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Adjust pill count</DialogTitle>
@@ -260,10 +266,11 @@ function AdjustDialog({ med, onClose }: { med: Medication | null; onClose: () =>
         </DialogHeader>
         <div>
           <Label htmlFor="val">Pills on hand</Label>
-          <Input id="val" type="number" min="0" value={val} onChange={(e) => setVal(e.target.value)} />
+          <Input id="val" type="number" min="0" max="10000" step="1" inputMode="numeric" value={val} onChange={(e) => setVal(e.target.value)} />
+          {error && <p className="text-xs text-destructive mt-1">{error}</p>}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => { setVal(""); onClose(); }}>Cancel</Button>
+          <Button variant="outline" onClick={() => { setVal(""); setError(null); onClose(); }}>Cancel</Button>
           <Button onClick={submit}>Save</Button>
         </DialogFooter>
       </DialogContent>

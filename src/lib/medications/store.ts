@@ -6,6 +6,7 @@ import type {
   Medication,
   RefillLogEntry,
 } from "./types";
+import { appStateSchema } from "./schemas";
 
 const STORAGE_KEY = "med-reminder-v1";
 
@@ -215,11 +216,24 @@ export const actions = {
   },
 
   importJson(raw: string) {
-    const parsed = JSON.parse(raw) as AppState;
+    // Never trust an imported file: parse JSON, then schema-validate every
+    // field. Rejects extra keys, bad types, malformed dates/colors/ids, and
+    // oversized strings/arrays — preventing tampered exports from poisoning
+    // state or smuggling unexpected fields into rendered output.
+    let json: unknown;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      throw new Error("File is not valid JSON");
+    }
+    const result = appStateSchema.safeParse(json);
+    if (!result.success) {
+      throw new Error("File is not a valid Prozume export");
+    }
     setState({
-      medications: parsed.medications ?? [],
-      doseLog: parsed.doseLog ?? [],
-      refillLog: parsed.refillLog ?? [],
+      medications: result.data.medications,
+      doseLog: result.data.doseLog,
+      refillLog: result.data.refillLog,
     });
   },
 

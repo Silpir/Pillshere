@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, parseISO } from "date-fns";
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import type { Medication, Schedule } from "./types";
 
 function parseTime(t: string, day: Date): Date {
@@ -13,6 +13,11 @@ export function scheduledTimesForDay(med: Medication, day: Date): Date[] {
   if (med.archivedAt) return [];
   const s = med.schedule;
   if (s.kind === "prn") return [];
+  // Respect optional start date — never schedule before it.
+  if ("startDate" in s && s.startDate) {
+    const start = parseISO(s.startDate);
+    if (differenceInCalendarDays(day, start) < 0) return [];
+  }
   if (s.kind === "daily") return s.times.map((t) => parseTime(t, day));
   if (s.kind === "weekdays") {
     if (!s.weekdays.includes(day.getDay())) return [];
@@ -56,14 +61,18 @@ export function isLowSupply(med: Medication): boolean {
 
 export function describeSchedule(s: Schedule): string {
   if (s.kind === "prn") return "As needed";
+  const startSuffix =
+    "startDate" in s && s.startDate
+      ? ` (from ${format(parseISO(s.startDate), "MMM d, yyyy")})`
+      : "";
   if (s.kind === "daily")
-    return `Daily at ${s.times.join(", ") || "—"}`;
+    return `Daily at ${s.times.join(", ") || "—"}${startSuffix}`;
   if (s.kind === "weekdays") {
     const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const days = s.weekdays.map((d) => names[d]).join("/");
-    return `${days} at ${s.times.join(", ") || "—"}`;
+    return `${days} at ${s.times.join(", ") || "—"}${startSuffix}`;
   }
   if (s.kind === "every_n_days")
-    return `Every ${s.everyN} day${s.everyN === 1 ? "" : "s"} at ${s.times.join(", ") || "—"}`;
+    return `Every ${s.everyN} day${s.everyN === 1 ? "" : "s"} at ${s.times.join(", ") || "—"}${startSuffix}`;
   return "";
 }

@@ -91,9 +91,10 @@ export function MedForm({
 
   function buildSchedule(): Schedule {
     if (d.scheduleKind === "prn") return { kind: "prn" };
-    if (d.scheduleKind === "daily") return { kind: "daily", times: d.times };
+    if (d.scheduleKind === "daily")
+      return { kind: "daily", times: d.times, startDate: d.startDate || undefined };
     if (d.scheduleKind === "weekdays")
-      return { kind: "weekdays", weekdays: d.weekdays, times: d.times };
+      return { kind: "weekdays", weekdays: d.weekdays, times: d.times, startDate: d.startDate || undefined };
     return {
       kind: "every_n_days",
       everyN: Number(d.everyN),
@@ -253,6 +254,21 @@ export function MedForm({
                 onChange={(e) => update("startDate", e.target.value)}
               />
             </div>
+          </div>
+        )}
+
+        {(d.scheduleKind === "daily" || d.scheduleKind === "weekdays") && (
+          <div>
+            <Label htmlFor="startOpt">Start date (optional)</Label>
+            <Input
+              id="startOpt"
+              type="date"
+              value={d.startDate}
+              onChange={(e) => update("startDate", e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Doses before this date won't appear in Today or History.
+            </p>
           </div>
         )}
 

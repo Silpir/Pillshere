@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { useNotificationSync } from "@/hooks/use-notification-sync";
 
 function NotFoundComponent() {
   return (
@@ -120,8 +121,16 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <NotificationSyncBoundary />
       <Outlet />
       <Toaster richColors position="top-center" />
     </QueryClientProvider>
   );
+}
+
+function NotificationSyncBoundary() {
+  // Hook lives in its own component so the store subscription doesn't
+  // re-render the entire root tree on every state change.
+  useNotificationSync();
+  return null;
 }

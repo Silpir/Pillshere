@@ -15,11 +15,13 @@ export const scheduleSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("daily"),
     times: z.array(timeStr).min(1, "Add at least one time"),
+    startDate: isoDateStr.optional(),
   }),
   z.object({
     kind: z.literal("weekdays"),
     weekdays: z.array(z.number().int().min(0).max(6)).min(1, "Pick at least one day"),
     times: z.array(timeStr).min(1, "Add at least one time"),
+    startDate: isoDateStr.optional(),
   }),
   z.object({
     kind: z.literal("every_n_days"),

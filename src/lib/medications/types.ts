@@ -1,8 +1,8 @@
 export type ScheduleKind = "daily" | "weekdays" | "every_n_days" | "prn";
 
 export type Schedule =
-  | { kind: "daily"; times: string[] } // times "HH:MM"
-  | { kind: "weekdays"; weekdays: number[]; times: string[] } // 0=Sun..6=Sat
+  | { kind: "daily"; times: string[]; startDate?: string } // times "HH:MM", startDate "YYYY-MM-DD"
+  | { kind: "weekdays"; weekdays: number[]; times: string[]; startDate?: string } // 0=Sun..6=Sat
   | { kind: "every_n_days"; everyN: number; startDate: string; times: string[] }
   | { kind: "prn" };
 

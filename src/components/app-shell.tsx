@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useAppState } from "@/lib/medications/store";
 import { isLowSupply } from "@/lib/medications/schedule";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function NavLink({ to, children }: { to: string; children: ReactNode }) {
   return (
@@ -41,6 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             </NavLink>
             <NavLink to="/history">History</NavLink>
+            <ThemeToggle />
           </nav>
         </div>
       </header>

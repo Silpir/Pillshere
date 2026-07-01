@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { appStateSchema } from "@/lib/medications/schemas";
+import { renderTextReport } from "@/lib/medications/report";
 
 // Server-side export endpoint. Runs behind securityHeadersMiddleware
 // (see src/start.ts), so every download response carries CSP,
@@ -53,45 +54,15 @@ export const Route = createFileRoute("/api/export")({
   },
 });
 
-type ParsedOk = { ok: true; state: import("zod").infer<typeof appStateSchema>; fmt: "json" | "text" };
-type ParsedErr = { ok: false; error: string };
+type Parsed =
+  | { ok: true; state: Parameters<typeof renderTextReport>[0]; fmt: "json" | "text" }
+  | { ok: false; error: string };
 
-function z_parseWrapper(body: unknown): ParsedOk | ParsedErr {
+function z_parseWrapper(body: unknown): Parsed {
   if (!body || typeof body !== "object") return { ok: false, error: "Invalid body" };
   const { format: fmt, state } = body as { format?: string; state?: unknown };
   if (fmt !== "json" && fmt !== "text") return { ok: false, error: "Invalid format" };
   const result = appStateSchema.safeParse(state);
   if (!result.success) return { ok: false, error: "Invalid state" };
   return { ok: true, state: result.data, fmt };
-}
-
-export function renderTextReport(state: import("zod").infer<typeof appStateSchema>): string {
-  const lines: string[] = [];
-  lines.push("Prozume — Medication history");
-  lines.push(`Generated: ${format(new Date(), "yyyy-MM-dd HH:mm")}`);
-  lines.push("");
-  lines.push(`Medications (${state.medications.length}):`);
-  for (const m of state.medications) {
-    lines.push(
-      `  • ${m.name}  —  ${m.pillsPerDose} pill/dose  —  ${m.supply.currentPills}/${m.supply.originalQty} on hand`,
-    );
-  }
-  lines.push("");
-  lines.push(`Dose log (${state.doseLog.length}):`);
-  const doses = [...state.doseLog].sort((a, b) => b.scheduledFor.localeCompare(a.scheduledFor));
-  for (const d of doses) {
-    const med = state.medications.find((m) => m.id === d.medId);
-    lines.push(
-      `  ${format(parseISO(d.scheduledFor), "yyyy-MM-dd HH:mm")}  ${d.status.padEnd(7)}  ${med?.name ?? d.medId}`,
-    );
-  }
-  lines.push("");
-  lines.push(`Refill log (${state.refillLog.length}):`);
-  for (const r of [...state.refillLog].reverse()) {
-    const med = state.medications.find((m) => m.id === r.medId);
-    lines.push(
-      `  ${format(parseISO(r.at), "yyyy-MM-dd")}  +${r.pillsAdded} pills  ${med?.name ?? r.medId}`,
-    );
-  }
-  return lines.join("\n") + "\n";
 }

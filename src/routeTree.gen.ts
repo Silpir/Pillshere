@@ -14,6 +14,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedsIndexRouteImport } from './routes/meds.index'
 import { Route as MedsNewRouteImport } from './routes/meds.new'
+import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as MedsIdEditRouteImport } from './routes/meds.$id.edit'
 
 const MedsRoute = MedsRouteImport.update({
@@ -41,6 +42,11 @@ const MedsNewRoute = MedsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => MedsRoute,
 } as any)
+const ApiExportRoute = ApiExportRouteImport.update({
+  id: '/api/export',
+  path: '/api/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MedsIdEditRoute = MedsIdEditRouteImport.update({
   id: '/$id/edit',
   path: '/$id/edit',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/meds': typeof MedsRouteWithChildren
+  '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
   '/meds/$id/edit': typeof MedsIdEditRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
+  '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds': typeof MedsIndexRoute
   '/meds/$id/edit': typeof MedsIdEditRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/meds': typeof MedsRouteWithChildren
+  '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
   '/meds/$id/edit': typeof MedsIdEditRoute
@@ -77,16 +86,24 @@ export interface FileRouteTypes {
     | '/'
     | '/history'
     | '/meds'
+    | '/api/export'
     | '/meds/new'
     | '/meds/'
     | '/meds/$id/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/history' | '/meds/new' | '/meds' | '/meds/$id/edit'
+  to:
+    | '/'
+    | '/history'
+    | '/api/export'
+    | '/meds/new'
+    | '/meds'
+    | '/meds/$id/edit'
   id:
     | '__root__'
     | '/'
     | '/history'
     | '/meds'
+    | '/api/export'
     | '/meds/new'
     | '/meds/'
     | '/meds/$id/edit'
@@ -96,6 +113,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoryRoute: typeof HistoryRoute
   MedsRoute: typeof MedsRouteWithChildren
+  ApiExportRoute: typeof ApiExportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -135,6 +153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedsNewRouteImport
       parentRoute: typeof MedsRoute
     }
+    '/api/export': {
+      id: '/api/export'
+      path: '/api/export'
+      fullPath: '/api/export'
+      preLoaderRoute: typeof ApiExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/meds/$id/edit': {
       id: '/meds/$id/edit'
       path: '/$id/edit'
@@ -163,17 +188,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoryRoute: HistoryRoute,
   MedsRoute: MedsRouteWithChildren,
+  ApiExportRoute: ApiExportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

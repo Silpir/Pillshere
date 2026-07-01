@@ -8,7 +8,7 @@ import {
   startOfDay,
   subDays,
 } from "date-fns";
-import { Download, Upload, Trash2 } from "lucide-react";
+import { Download, Upload, Trash2, FileText, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { actions, useAppState } from "@/lib/medications/store";
 import { scheduledTimesForDay } from "@/lib/medications/schedule";
+import { renderTextReport } from "@/lib/medications/report";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
@@ -115,14 +116,34 @@ function HistoryPage() {
     return items.slice(0, 200);
   }, [allInstances]);
 
-  function handleExport() {
-    const blob = new Blob([actions.exportJson()], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `prozume-${format(now, "yyyy-MM-dd")}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async function serverDownload(fmt: "json" | "text") {
+    try {
+      const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format: fmt, state }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `prozume-${format(now, "yyyy-MM-dd")}.${fmt === "json" ? "json" : "txt"}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
+    }
+  }
+
+  function handleEmail() {
+    const body = renderTextReport(state);
+    const subject = `Prozume history — ${format(now, "yyyy-MM-dd")}`;
+    // mailto: has practical length limits; truncate body for very long logs.
+    const MAX = 1800;
+    const truncated =
+      body.length > MAX ? body.slice(0, MAX) + "\n\n[...truncated — use Export as text for full log]" : body;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(truncated)}`;
   }
 
   function handleImport(file: File) {
@@ -268,8 +289,14 @@ function HistoryPage() {
           <Card>
             <CardContent className="py-4 space-y-3">
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={handleExport}>
+                <Button variant="outline" size="sm" onClick={() => serverDownload("json")}>
                   <Download className="h-4 w-4 mr-1" /> Export JSON
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => serverDownload("text")}>
+                  <FileText className="h-4 w-4 mr-1" /> Export as text
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleEmail}>
+                  <Mail className="h-4 w-4 mr-1" /> Email history
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
                   <Upload className="h-4 w-4 mr-1" /> Import JSON

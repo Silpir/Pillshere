@@ -7,7 +7,7 @@ All data stays on-device (localStorage); no backend is required.
 
 ```bash
 bun install
-bun run android:add     # builds .output/public, creates android/, then syncs plugins
+bun run android:add     # builds dist/client/index.html, creates android/, then syncs plugins
 bun run android:open    # opens Android Studio
 ```
 
@@ -22,8 +22,8 @@ bun run android:add
 bun run android:open
 ```
 
-This fixes errors about missing `.output/public/index.html`,
-`capacitor.settings.gradle`, or `capacitor.plugins.json`.
+This fixes errors about missing `index.html`, `capacitor.settings.gradle`, or
+`capacitor.plugins.json`.
 
 ## After each code change
 

@@ -3,9 +3,9 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "app.lovable.pillshere",
   appName: "Pillshere",
-  // TanStack Start writes its prerendered client bundle to .output/public.
-  // Run `bun run build` before `npx cap sync android`.
-  webDir: ".output/public",
+  // `bun run android:web` builds TanStack Start, then writes the static
+  // Android shell that Capacitor requires at dist/client/index.html.
+  webDir: "dist/client",
   android: {
     allowMixedContent: false,
   },

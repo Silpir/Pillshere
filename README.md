@@ -18,7 +18,7 @@ no backend, no cloud sync.
 ```bash
 bun install
 bun run dev       # start dev server
-bun run build     # production build (.output/public)
+bun run build     # production web build
 ```
 
 ## Android app
@@ -37,14 +37,14 @@ the app is closed.
 
 ```bash
 bun install
-bun run android:add      # builds .output/public, creates android/, then syncs plugins
+bun run android:add      # builds dist/client/index.html, creates android/, then syncs plugins
 bun run android:open     # opens Android Studio
 ```
 
 In Android Studio, click **Run** to launch on an emulator or the connected device.
 
 If `bunx cap add android` was run before a successful build, Capacitor may leave a
-half-created `android/` folder and fail with missing `.output/public/index.html` or
+half-created `android/` folder and fail with missing `index.html` or
 `capacitor.plugins.json`. Delete that folder and use the project script instead:
 
 ```bat
@@ -53,8 +53,8 @@ bun run android:add
 bun run android:open
 ```
 
-`.output/` is ignored by Git, so every fresh checkout must run a local build before
-Capacitor can copy web assets into Android.
+`dist/` is ignored by Git, so every fresh checkout must run a local Android web
+build before Capacitor can copy web assets into Android.
 
 ### After each code change
 

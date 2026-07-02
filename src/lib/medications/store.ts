@@ -228,7 +228,7 @@ export const actions = {
     }
     const result = appStateSchema.safeParse(json);
     if (!result.success) {
-      throw new Error("File is not a valid Prozume export");
+      throw new Error("File is not a valid Pillshere export");
     }
     setState({
       medications: result.data.medications,

@@ -1,6 +1,6 @@
-# Prozume — Android build
+# Pillshere — Android build
 
-Prozume wraps the web app in [Capacitor](https://capacitorjs.com/) for Android.
+Pillshere wraps the web app in [Capacitor](https://capacitorjs.com/) for Android.
 All data stays on-device (localStorage); no backend is required.
 
 ## One-time setup
@@ -35,5 +35,5 @@ On the web build these are a no-op (in-app toasts only).
 ## Shipping to Play Store
 
 Build a signed AAB from Android Studio (Build → Generate Signed Bundle).
-The package id is `app.lovable.prozume` — change it in `capacitor.config.ts`
+The package id is `app.lovable.pillshere` — change it in `capacitor.config.ts`
 before your first publish if you want a different identifier.

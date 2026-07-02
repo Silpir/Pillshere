@@ -19,9 +19,9 @@ import type { DoseLogEntry, Medication } from "@/lib/medications/types";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Today — Prozume" },
+      { title: "Today — Pillshere" },
       { name: "description", content: "Today's medication doses with quick check-off and supply alerts." },
-      { property: "og:title", content: "Today — Prozume" },
+      { property: "og:title", content: "Today — Pillshere" },
       { property: "og:description", content: "Today's medication doses with quick check-off and supply alerts." },
     ],
   }),

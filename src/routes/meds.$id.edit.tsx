@@ -9,7 +9,7 @@ import { actions, useAppState } from "@/lib/medications/store";
 export const Route = createFileRoute("/meds/$id/edit")({
   head: () => ({
     meta: [
-      { title: "Edit medication — Prozume" },
+      { title: "Edit medication — Pillshere" },
       { name: "description", content: "Edit medication schedule and supply settings." },
     ],
   }),

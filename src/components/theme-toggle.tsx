@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type Theme = "light" | "dark" | "system";
-const KEY = "prozume-theme";
+const KEY = "pillshere-theme";
 
 function applyTheme(t: Theme) {
   const root = document.documentElement;

@@ -79,10 +79,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Prozume — Medication reminders" },
+      { title: "Pillshere — Medication reminders" },
       { name: "description", content: "Lightweight medication reminder & adherence tracker with pill supply and refill alerts." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Prozume — Medication reminders" },
+      { property: "og:title", content: "Pillshere — Medication reminders" },
       { property: "og:description", content: "Lightweight medication reminder & adherence tracker with pill supply and refill alerts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -109,7 +109,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           // Apply saved theme before first paint to avoid flash.
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('prozume-theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('pillshere-theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
       </head>

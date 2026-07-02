@@ -29,9 +29,9 @@ import { refillSchema, adjustPillsSchema } from "@/lib/medications/schemas";
 export const Route = createFileRoute("/meds/")({
   head: () => ({
     meta: [
-      { title: "Medications — Prozume" },
+      { title: "Medications — Pillshere" },
       { name: "description", content: "Manage your medications, schedules, and pill supply." },
-      { property: "og:title", content: "Medications — Prozume" },
+      { property: "og:title", content: "Medications — Pillshere" },
       { property: "og:description", content: "Manage your medications, schedules, and pill supply." },
     ],
   }),

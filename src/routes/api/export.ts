@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/export")({
             status: 200,
             headers: {
               "Content-Type": "text/plain; charset=utf-8",
-              "Content-Disposition": `attachment; filename="prozume-${stamp}.txt"`,
+              "Content-Disposition": `attachment; filename="pillshere-${stamp}.txt"`,
               "Cache-Control": "no-store",
             },
           });
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/export")({
           status: 200,
           headers: {
             "Content-Type": "application/json; charset=utf-8",
-            "Content-Disposition": `attachment; filename="prozume-${stamp}.json"`,
+            "Content-Disposition": `attachment; filename="pillshere-${stamp}.json"`,
             "Cache-Control": "no-store",
           },
         });

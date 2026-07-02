@@ -4,7 +4,7 @@ import type { appStateSchema } from "./schemas";
 
 export function renderTextReport(state: z.infer<typeof appStateSchema>): string {
   const lines: string[] = [];
-  lines.push("Prozume — Medication history");
+  lines.push("Pillshere — Medication history");
   lines.push(`Generated: ${format(new Date(), "yyyy-MM-dd HH:mm")}`);
   lines.push("");
   lines.push(`Medications (${state.medications.length}):`);

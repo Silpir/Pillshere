@@ -34,9 +34,9 @@ import { renderTextReport } from "@/lib/medications/report";
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "History & stats — Prozume" },
+      { title: "History & stats — Pillshere" },
       { name: "description", content: "Dose history, adherence, streaks, and refill log." },
-      { property: "og:title", content: "History & stats — Prozume" },
+      { property: "og:title", content: "History & stats — Pillshere" },
       { property: "og:description", content: "Dose history, adherence, streaks, and refill log." },
     ],
   }),
@@ -128,7 +128,7 @@ function HistoryPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `prozume-${format(now, "yyyy-MM-dd")}.${fmt === "json" ? "json" : "txt"}`;
+      a.download = `pillshere-${format(now, "yyyy-MM-dd")}.${fmt === "json" ? "json" : "txt"}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -138,7 +138,7 @@ function HistoryPage() {
 
   function handleEmail() {
     const body = renderTextReport(state);
-    const subject = `Prozume history — ${format(now, "yyyy-MM-dd")}`;
+    const subject = `Pillshere history — ${format(now, "yyyy-MM-dd")}`;
     // mailto: has practical length limits; truncate body for very long logs.
     const MAX = 1800;
     const truncated =

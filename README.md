@@ -38,9 +38,9 @@ the app is closed.
 ```bash
 bun install
 bun run build            # builds the web bundle Capacitor packages (.output/public)
-npx cap add android      # first time only — generates the android/ native project
-npx cap sync android     # copies the web build + plugins into the native project
-npx cap open android     # opens Android Studio
+bunx cap add android     # first time only — generates the android/ native project
+bunx cap sync android    # copies the web build + plugins into the native project
+bunx cap open android    # opens Android Studio
 ```
 
 In Android Studio, click **Run** to launch on an emulator or the connected device.
@@ -48,8 +48,11 @@ In Android Studio, click **Run** to launch on an emulator or the connected devic
 ### After each code change
 
 ```bash
-bun run build && npx cap sync android
+bun run build && bunx cap sync android
 ```
+
+> On Windows without Bun, use `npx @capacitor/cli <cmd>` instead of `bunx cap <cmd>`.
+> Plain `npx cap ...` resolves to an unrelated npm package named `cap` and will fail.
 
 Then hit Run in Android Studio again.
 

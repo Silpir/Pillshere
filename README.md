@@ -19,6 +19,7 @@ no backend, no cloud sync.
 bun install
 bun run dev       # start dev server
 bun run build     # production web build
+bun run android:web # Android web bundle (dist/capacitor)
 ```
 
 ## Android app
@@ -37,7 +38,7 @@ the app is closed.
 
 ```bash
 bun install
-bun run android:add      # builds dist/client/index.html, creates android/, then syncs plugins
+bun run android:add      # builds dist/capacitor/index.html, creates android/, then syncs plugins
 bun run android:open     # opens Android Studio
 ```
 

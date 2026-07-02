@@ -7,7 +7,7 @@ All data stays on-device (localStorage); no backend is required.
 
 ```bash
 bun install
-bun run android:add     # builds dist/client/index.html, creates android/, then syncs plugins
+bun run android:add     # builds dist/capacitor/index.html, creates android/, then syncs plugins
 bun run android:open    # opens Android Studio
 ```
 

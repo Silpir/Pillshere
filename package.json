@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "android:web": "bun run build && bun scripts/build-capacitor-web.mjs",
+    "android:web": "vite build --config vite.capacitor.config.ts",
     "android:add": "bun run android:web && cap add android && cap sync android",
     "android:sync": "bun run android:web && cap sync android",
     "android:open": "cap open android",

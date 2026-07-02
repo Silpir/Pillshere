@@ -52,7 +52,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: OSV Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@v2.0.2
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
         with:
           scan-args: |-
             --recursive

@@ -1,4 +1,4 @@
-# Prozume
+# Pillshere
 
 Lightweight, local-first medication reminder & adherence tracker.
 All data lives in your browser (or on your device on Android) — no accounts,
@@ -23,7 +23,7 @@ bun run build     # production build (.output/public)
 
 ## Android app
 
-Prozume ships as a native Android app via [Capacitor](https://capacitorjs.com/).
+Pillshere ships as a native Android app via [Capacitor](https://capacitorjs.com/).
 Same web UI, same local data — with OS-level notifications that fire even when
 the app is closed.
 
@@ -70,7 +70,7 @@ On the web build these are a no-op (in-app toasts only).
 3. Create or select a signing key, then follow the wizard.
 4. Upload the resulting `.aab` in the Play Console.
 
-The package id is `app.lovable.prozume`. Change it in `capacitor.config.ts`
+The package id is `app.lovable.pillshere`. Change it in `capacitor.config.ts`
 **before your first publish** if you want a different identifier.
 
 ### Data ownership

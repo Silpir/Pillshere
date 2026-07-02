@@ -8,9 +8,9 @@ All data stays on-device (localStorage); no backend is required.
 ```bash
 bun install
 bun run build           # produces .output/public (the web bundle Capacitor packages)
-npx cap add android     # only the first time — creates the android/ native project
-npx cap sync android
-npx cap open android    # opens Android Studio
+bunx cap add android    # only the first time — creates the android/ native project
+bunx cap sync android
+bunx cap open android   # opens Android Studio
 ```
 
 From Android Studio, **Run** on an emulator or USB-connected phone.
@@ -18,7 +18,7 @@ From Android Studio, **Run** on an emulator or USB-connected phone.
 ## After each code change
 
 ```bash
-bun run build && npx cap sync android
+bun run build && bunx cap sync android
 ```
 
 ## Local notifications

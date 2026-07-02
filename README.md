@@ -37,18 +37,29 @@ the app is closed.
 
 ```bash
 bun install
-bun run build            # builds the web bundle Capacitor packages (.output/public)
-bunx cap add android     # first time only — generates the android/ native project
-bunx cap sync android    # copies the web build + plugins into the native project
-bunx cap open android    # opens Android Studio
+bun run android:add      # builds .output/public, creates android/, then syncs plugins
+bun run android:open     # opens Android Studio
 ```
 
 In Android Studio, click **Run** to launch on an emulator or the connected device.
 
+If `bunx cap add android` was run before a successful build, Capacitor may leave a
+half-created `android/` folder and fail with missing `.output/public/index.html` or
+`capacitor.plugins.json`. Delete that folder and use the project script instead:
+
+```bat
+rmdir /s /q android
+bun run android:add
+bun run android:open
+```
+
+`.output/` is ignored by Git, so every fresh checkout must run a local build before
+Capacitor can copy web assets into Android.
+
 ### After each code change
 
 ```bash
-bun run build && bunx cap sync android
+bun run android:sync
 ```
 
 > On Windows without Bun, use `npx @capacitor/cli <cmd>` instead of `bunx cap <cmd>`.

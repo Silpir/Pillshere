@@ -7,18 +7,28 @@ All data stays on-device (localStorage); no backend is required.
 
 ```bash
 bun install
-bun run build           # produces .output/public (the web bundle Capacitor packages)
-bunx cap add android    # only the first time — creates the android/ native project
-bunx cap sync android
-bunx cap open android   # opens Android Studio
+bun run android:add     # builds .output/public, creates android/, then syncs plugins
+bun run android:open    # opens Android Studio
 ```
 
 From Android Studio, **Run** on an emulator or USB-connected phone.
 
+If Capacitor was started before a successful web build, remove the incomplete native
+folder and rerun the script:
+
+```bat
+rmdir /s /q android
+bun run android:add
+bun run android:open
+```
+
+This fixes errors about missing `.output/public/index.html`,
+`capacitor.settings.gradle`, or `capacitor.plugins.json`.
+
 ## After each code change
 
 ```bash
-bun run build && bunx cap sync android
+bun run android:sync
 ```
 
 ## Local notifications

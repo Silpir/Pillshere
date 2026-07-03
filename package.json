@@ -9,8 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "android:web": "vite build --config vite.capacitor.config.ts",
-    "android:add": "bun run android:web && cap add android && cap sync android",
-    "android:sync": "bun run android:web && cap sync android",
+    "android:add": "bun run android:web && cap add android && cap sync android && node scripts/verify-android-config.mjs",
+    "android:sync": "bun run android:web && cap sync android && node scripts/verify-android-config.mjs",
+    "android:verify": "node scripts/verify-android-config.mjs",
     "android:open": "cap open android",
     "lint": "eslint .",
     "format": "prettier --write ."

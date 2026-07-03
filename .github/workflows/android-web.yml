@@ -1,0 +1,55 @@
+name: Android web bundle
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-android-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Build Capacitor web bundle
+        run: bun run android:web
+      - name: Verify dist/capacitor/index.html exists and is non-blank
+        run: |
+          set -euo pipefail
+          FILE="dist/capacitor/index.html"
+          if [ ! -f "$FILE" ]; then
+            echo "::error::Missing $FILE — vite build did not emit an index.html for Capacitor."
+            exit 1
+          fi
+          SIZE=$(wc -c < "$FILE")
+          echo "index.html size: ${SIZE} bytes"
+          if [ "$SIZE" -lt 200 ]; then
+            echo "::error::$FILE is smaller than 200 bytes — likely blank."
+            exit 1
+          fi
+          if ! grep -q '<div id="root">' "$FILE"; then
+            echo "::error::$FILE is missing the #root mount node."
+            exit 1
+          fi
+          if ! grep -Eq '<script[^>]+type="module"[^>]+src="/assets/[^"]+\.js"' "$FILE"; then
+            echo "::error::$FILE is missing a module script referencing /assets/*.js."
+            exit 1
+          fi
+      - name: Verify JS/CSS assets emitted
+        run: |
+          set -euo pipefail
+          if [ -z "$(ls -A dist/capacitor/assets 2>/dev/null || true)" ]; then
+            echo "::error::dist/capacitor/assets is empty — build produced no bundles."
+            exit 1
+          fi
+          ls -la dist/capacitor/assets
+      - name: Upload bundle artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capacitor-web-bundle
+          path: dist/capacitor
+          if-no-files-found: error

@@ -43,6 +43,13 @@ attribute on its root `<manifest>` tag — AGP 8+ forbids setting both. The
 `android/` folder is gitignored, so re-apply this edit whenever you delete and
 re-scaffold the native project.
 
+`bun run android:add` and `bun run android:sync` end with
+`node scripts/verify-android-config.mjs`, which fails the command if
+`capacitor.config.ts` (appId / webDir), `vite.capacitor.config.ts` (outDir),
+and `android/app/build.gradle` (namespace / applicationId) drift apart, or if
+`AndroidManifest.xml` still carries a legacy `package="..."`. Run it manually
+with `bun run android:verify`.
+
 ## After each code change
 
 ```bash

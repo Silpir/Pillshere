@@ -25,6 +25,24 @@ bun run android:open
 This fixes errors about missing `index.html`, `capacitor.settings.gradle`, or
 `capacitor.plugins.json`.
 
+### Gradle: "Namespace not specified"
+
+Android Gradle Plugin 8+ requires an explicit `namespace` in
+`android/app/build.gradle`. If Capacitor's scaffold omits it, open the file and
+ensure the `android { ... }` block starts with:
+
+```gradle
+android {
+    namespace = "app.lovable.pillshere"
+    ...
+}
+```
+
+Also confirm `android/app/src/main/AndroidManifest.xml` has no `package="..."`
+attribute on its root `<manifest>` tag — AGP 8+ forbids setting both. The
+`android/` folder is gitignored, so re-apply this edit whenever you delete and
+re-scaffold the native project.
+
 ## After each code change
 
 ```bash

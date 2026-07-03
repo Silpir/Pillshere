@@ -34,8 +34,8 @@ jobs:
             echo "::error::$FILE is missing the #root mount node."
             exit 1
           fi
-          if ! grep -Eq '<script[^>]+src="[^"]*capacitor-main[^"]*"' "$FILE"; then
-            echo "::error::$FILE is missing the capacitor-main entry script."
+          if ! grep -Eq '<script[^>]+type="module"[^>]+src="/assets/[^"]+\.js"' "$FILE"; then
+            echo "::error::$FILE is missing a module script referencing /assets/*.js."
             exit 1
           fi
       - name: Verify JS/CSS assets emitted

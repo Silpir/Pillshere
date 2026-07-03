@@ -68,6 +68,24 @@ bun run android:sync
 
 Then hit Run in Android Studio again.
 
+### Gradle: "Namespace not specified"
+
+Android Gradle Plugin 8+ requires an explicit `namespace` in
+`android/app/build.gradle`. If Capacitor's scaffold omits it, open the file and
+ensure the `android { ... }` block starts with:
+
+```gradle
+android {
+    namespace = "app.lovable.pillshere"
+    ...
+}
+```
+
+Also confirm `android/app/src/main/AndroidManifest.xml` has no `package="..."`
+attribute on its root `<manifest>` tag — AGP 8+ forbids setting both. The
+`android/` folder is gitignored, so re-apply this edit whenever you delete and
+re-scaffold the native project.
+
 ### Local notifications
 
 On first launch, the app asks for notification permission. Reminders are

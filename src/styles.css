@@ -140,5 +140,13 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    /* Android WebView (Capacitor) freezes touch/scroll on some devices when
+     * a sticky element uses backdrop-filter and the default touch-action
+     * negotiation kicks in. `manipulation` disables the 300ms double-tap
+     * delay and keeps scroll/tap responsive. Pair with `overscroll-behavior`
+     * so pull-to-refresh from an inner scroller doesn't hijack the WebView. */
+    touch-action: manipulation;
+    overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
   }
 }

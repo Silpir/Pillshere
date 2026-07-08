@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/platform-select";
 import { MED_COLORS, type Medication, type Schedule } from "@/lib/medications/types";
 import { medFormSchema } from "@/lib/medications/schemas";
 

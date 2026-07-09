@@ -6,7 +6,7 @@
 // Runs as part of android:add and android:sync so drift fails fast
 // instead of surfacing as a Gradle or Capacitor copy error later.
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const errors = [];

@@ -24,7 +24,7 @@ const html = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pillshere — Medication reminders</title>
     <meta name="description" content="Lightweight medication reminder & adherence tracker with pill supply and refill alerts." />
 ${cssLink}    <script>
@@ -32,6 +32,7 @@ ${cssLink}    <script>
     </script>
   </head>
   <body>
+    <div id="root"></div>
     <script type="module" src="/assets/${entry}"></script>
   </body>
 </html>

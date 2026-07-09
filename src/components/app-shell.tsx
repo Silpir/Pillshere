@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* NOTE: `backdrop-blur` + `sticky` locks input & scroll on some Android
        * WebViews (Capacitor). Use an opaque background instead — the visual
        * cost is minimal and the header stays fully interactive on-device. */}
-      <header className="border-b sticky top-0 z-20 bg-background">
+      <header className="android-static-header border-b sticky top-0 z-20 bg-background">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-2 font-semibold">
             <Pill className="h-5 w-5 text-primary" />

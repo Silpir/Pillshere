@@ -44,11 +44,26 @@ attribute on its root `<manifest>` tag — AGP 8+ forbids setting both. The
 re-scaffold the native project.
 
 `bun run android:add` and `bun run android:sync` end with
-`node scripts/verify-android-config.mjs`, which fails the command if
-`capacitor.config.ts` (appId / webDir), `vite.capacitor.config.ts` (outDir),
-and `android/app/build.gradle` (namespace / applicationId) drift apart, or if
-`AndroidManifest.xml` still carries a legacy `package="..."`. Run it manually
-with `bun run android:verify`.
+`node scripts/patch-android-gradle.mjs` and
+`node scripts/verify-android-config.mjs`. The patch step removes Capacitor's
+unused generated `flatDir` repository when no Cordova plugin ships local
+`.jar`/`.aar` files, avoiding Gradle's metadata warning. The verify step fails
+the command if `capacitor.config.ts` (appId / webDir),
+`vite.capacitor.config.ts` (outDir), and `android/app/build.gradle` (namespace /
+applicationId) drift apart, if `AndroidManifest.xml` still carries a legacy
+`package="..."`, or if an unused `flatDir` block returns. Run it manually with
+`bun run android:verify`.
+
+### Samsung / Android WebView touch freeze on Add medication
+
+The Capacitor Android build marks the document with `capacitor-android`, forces
+Radix/portal scroll locks back to an interactive body, makes the sticky header
+static in the native shell, and swaps schedule/refill selects to native
+`<select>` controls. After pulling changes, rebuild and reinstall the native app:
+
+```bash
+bun run android:sync
+```
 
 ## After each code change
 

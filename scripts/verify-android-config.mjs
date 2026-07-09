@@ -13,6 +13,14 @@ const errors = [];
 const warn = (msg) => console.warn(`[verify-android-config] ${msg}`);
 const fail = (msg) => errors.push(msg);
 
+function hasLocalBinary(dir) {
+  if (!existsSync(dir)) return false;
+  return readdirSync(dir, { withFileTypes: true }).some((entry) => {
+    if (!entry.isFile()) return false;
+    return /\.(?:aar|jar)$/i.test(entry.name);
+  });
+}
+
 function read(path) {
   return existsSync(path) ? readFileSync(path, "utf8") : null;
 }
@@ -54,6 +62,7 @@ const androidDir = "android";
 if (existsSync(androidDir)) {
   const gradlePath = join(androidDir, "app", "build.gradle");
   const manifestPath = join(androidDir, "app", "src", "main", "AndroidManifest.xml");
+  const cordovaGradlePath = join(androidDir, "capacitor-cordova-android-plugins", "build.gradle");
 
   const gradle = read(gradlePath);
   if (!gradle) {
@@ -88,6 +97,22 @@ if (existsSync(androidDir)) {
       `${manifestPath} still sets a \`package="..."\` attribute on <manifest>. ` +
         `AGP 8+ forbids setting both package and namespace — remove the package attribute.`,
     );
+  }
+
+  const cordovaGradle = read(cordovaGradlePath);
+  if (cordovaGradle && /flatDir\s*\{/.test(cordovaGradle)) {
+    const hasLocalArtifacts = [
+      join(androidDir, "capacitor-cordova-android-plugins", "src", "main", "libs"),
+      join(androidDir, "capacitor-cordova-android-plugins", "libs"),
+    ].some(hasLocalBinary);
+    if (!hasLocalArtifacts) {
+      fail(
+        `${cordovaGradlePath} still contains an unused \`flatDir\` repository. ` +
+          `Run \`bun run android:sync\` so scripts/patch-android-gradle.mjs removes it.`,
+      );
+    } else {
+      warn(`${cordovaGradlePath} keeps flatDir because local Cordova binaries are present.`);
+    }
   }
 } else {
   warn("android/ not present — skipping native project checks. Run `bun run android:add` first.");

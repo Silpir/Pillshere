@@ -149,4 +149,24 @@
     overscroll-behavior-y: contain;
     -webkit-tap-highlight-color: transparent;
   }
+
+  html.capacitor-android,
+  html.capacitor-android body,
+  html.capacitor-android #root {
+    min-height: 100%;
+  }
+
+  html.capacitor-android body {
+    /* Radix/RemoveScroll can leave inline pointer/scroll locks behind after
+     * native Android WebView focus or listbox handoff. Keep the Capacitor
+     * shell interactive even if a portalled primitive fails to clean up. */
+    overflow-y: auto !important;
+    pointer-events: auto !important;
+    touch-action: auto;
+    overscroll-behavior-y: auto;
+  }
+
+  html.capacitor-android .android-static-header {
+    position: static;
+  }
 }

@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install dependencies (frozen lockfile)
         run: bun install --frozen-lockfile
@@ -62,6 +62,10 @@ jobs:
   codeql:
     name: CodeQL Static Analysis
     runs-on: ubuntu-latest
+    # CodeQL requires GitHub Code Scanning to be enabled on the repository.
+    # Until it is enabled in repo Settings → Security → Code security, skip
+    # this job to avoid a hard failure on result upload.
+    if: false
     permissions:
       contents: read
       security-events: write

@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { clearAndroidInteractionLocks, isCapacitorAndroid } from "@/lib/platform";
 
 type Theme = "light" | "dark" | "system";
 const KEY = "pillshere-theme";
@@ -21,8 +22,10 @@ function applyTheme(t: Theme) {
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
+  const [android, setAndroid] = useState(false);
 
   useEffect(() => {
+    setAndroid(isCapacitorAndroid());
     const stored = (localStorage.getItem(KEY) as Theme | null) ?? "system";
     setTheme(stored);
     applyTheme(stored);
@@ -40,6 +43,26 @@ export function ThemeToggle() {
     localStorage.setItem(KEY, t);
     setTheme(t);
     applyTheme(t);
+  }
+
+  if (android) {
+    const nextTheme: Record<Theme, Theme> = { system: "light", light: "dark", dark: "system" };
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Toggle theme"
+        onPointerDown={clearAndroidInteractionLocks}
+        onTouchStart={clearAndroidInteractionLocks}
+        onClick={() => {
+          clearAndroidInteractionLocks();
+          pick(nextTheme[theme]);
+        }}
+      >
+        <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      </Button>
+    );
   }
 
   return (

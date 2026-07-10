@@ -1,12 +1,43 @@
 import { Link } from "@tanstack/react-router";
 import { Pill } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAppState } from "@/lib/medications/store";
 import { isLowSupply } from "@/lib/medications/schedule";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { clearAndroidInteractionLocks, isCapacitorAndroid } from "@/lib/platform";
 
 function NavLink({ to, children }: { to: string; children: ReactNode }) {
+  const [android, setAndroid] = useState(isCapacitorAndroid);
+  const [hash, setHash] = useState(() => (typeof window === "undefined" ? "" : window.location.hash));
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setAndroid(isCapacitorAndroid());
+      setHash(window.location.hash);
+      requestAnimationFrame(clearAndroidInteractionLocks);
+    };
+    onHashChange();
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  if (android) {
+    const href = `#${to}`;
+    const active = hash === href || (to === "/" && (hash === "" || hash === "#/"));
+    return (
+      <a
+        href={href}
+        className={active ? "px-3 py-1.5 rounded-md text-sm font-medium bg-accent text-foreground" : "px-3 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"}
+        onPointerDown={clearAndroidInteractionLocks}
+        onTouchStart={clearAndroidInteractionLocks}
+        onClick={() => requestAnimationFrame(clearAndroidInteractionLocks)}
+      >
+        {children}
+      </a>
+    );
+  }
+
   return (
     <Link
       to={to}

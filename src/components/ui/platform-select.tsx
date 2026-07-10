@@ -8,6 +8,7 @@ import {
   SelectValue as RadixValue,
   SelectGroup as RadixGroup,
 } from "./select";
+import { isCapacitorAndroid } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,22 +18,6 @@ import { cn } from "@/lib/utils";
  * while keeping the exact same API surface (Select/SelectTrigger/
  * SelectValue/SelectContent/SelectItem) on the web.
  */
-function isAndroidWebView(): boolean {
-  if (typeof window === "undefined") return false;
-  const win = window as unknown as {
-    androidBridge?: unknown;
-    Capacitor?: { getPlatform?: () => string; isNativePlatform?: () => boolean };
-  };
-  const ua = navigator.userAgent;
-
-  return (
-    win.androidBridge != null ||
-    win.Capacitor?.getPlatform?.() === "android" ||
-    (win.Capacitor?.isNativePlatform?.() === true && /Android/i.test(ua)) ||
-    (/Android/i.test(ua) && /; wv\)|Version\/\d+(?:\.\d+)? Chrome\//i.test(ua))
-  );
-}
-
 type SelectProps = {
   value?: string;
   defaultValue?: string;
@@ -93,11 +78,11 @@ function renderLabel(label: React.ReactNode): string {
 }
 
 export function Select(props: SelectProps) {
-  const [useNativeSelect, setUseNativeSelect] = React.useState(isAndroidWebView);
+  const [useNativeSelect, setUseNativeSelect] = React.useState(isCapacitorAndroid);
 
   React.useEffect(() => {
     if (useNativeSelect) return;
-    const update = () => setUseNativeSelect(isAndroidWebView());
+    const update = () => setUseNativeSelect(isCapacitorAndroid());
     update();
     const id = window.setTimeout(update, 100);
     return () => window.clearTimeout(id);

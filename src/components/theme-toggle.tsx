@@ -22,7 +22,7 @@ function applyTheme(t: Theme) {
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
-  const [android, setAndroid] = useState(false);
+  const [android, setAndroid] = useState(isCapacitorAndroid);
 
   useEffect(() => {
     setAndroid(isCapacitorAndroid());

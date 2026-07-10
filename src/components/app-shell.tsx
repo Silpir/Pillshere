@@ -8,15 +8,23 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { clearAndroidInteractionLocks, isCapacitorAndroid } from "@/lib/platform";
 
 function NavLink({ to, children }: { to: string; children: ReactNode }) {
-  const [android, setAndroid] = useState(false);
+  const [android, setAndroid] = useState(isCapacitorAndroid);
+  const [hash, setHash] = useState(() => (typeof window === "undefined" ? "" : window.location.hash));
 
   useEffect(() => {
-    setAndroid(isCapacitorAndroid());
+    const onHashChange = () => {
+      setAndroid(isCapacitorAndroid());
+      setHash(window.location.hash);
+      requestAnimationFrame(clearAndroidInteractionLocks);
+    };
+    onHashChange();
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
   if (android) {
     const href = `#${to}`;
-    const active = window.location.hash === href || (to === "/" && (window.location.hash === "" || window.location.hash === "#/"));
+    const active = hash === href || (to === "/" && (hash === "" || hash === "#/"));
     return (
       <a
         href={href}

@@ -3,26 +3,15 @@ import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import { clearAndroidInteractionLocks, isCapacitorAndroid } from "./lib/platform";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
-function isAndroidWebView() {
-  const win = window as unknown as {
-    androidBridge?: unknown;
-    Capacitor?: { getPlatform?: () => string; isNativePlatform?: () => boolean };
-  };
-  const ua = navigator.userAgent;
-
-  return (
-    win.androidBridge != null ||
-    win.Capacitor?.getPlatform?.() === "android" ||
-    (win.Capacitor?.isNativePlatform?.() === true && /Android/i.test(ua)) ||
-    (/Android/i.test(ua) && /; wv\)|Version\/\d+(?:\.\d+)? Chrome\//i.test(ua))
-  );
-}
-
-if (isAndroidWebView()) {
+if (isCapacitorAndroid()) {
   document.documentElement.classList.add("capacitor-android");
+  window.addEventListener("pointerdown", clearAndroidInteractionLocks, true);
+  window.addEventListener("touchstart", clearAndroidInteractionLocks, true);
+  window.addEventListener("hashchange", () => requestAnimationFrame(clearAndroidInteractionLocks));
 }
 
 const queryClient = new QueryClient();
@@ -30,7 +19,7 @@ const router = createRouter({
   routeTree,
   context: { queryClient },
   history: createHashHistory(),
-  scrollRestoration: true,
+  scrollRestoration: !isCapacitorAndroid(),
   defaultPreloadStaleTime: 0,
 });
 

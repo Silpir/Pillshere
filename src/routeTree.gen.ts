@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MedsRouteImport } from './routes/meds'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,6 +19,11 @@ import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as OauthGoogleCallbackRouteImport } from './routes/oauth.google.callback'
 import { Route as MedsIdEditRouteImport } from './routes/meds.$id.edit'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MedsRoute = MedsRouteImport.update({
   id: '/meds',
   path: '/meds',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/meds': typeof MedsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds': typeof MedsIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/meds': typeof MedsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/history'
     | '/meds'
+    | '/settings'
     | '/api/export'
     | '/meds/new'
     | '/meds/'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/history'
+    | '/settings'
     | '/api/export'
     | '/meds/new'
     | '/meds'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/history'
     | '/meds'
+    | '/settings'
     | '/api/export'
     | '/meds/new'
     | '/meds/'
@@ -125,12 +137,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoryRoute: typeof HistoryRoute
   MedsRoute: typeof MedsRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   ApiExportRoute: typeof ApiExportRoute
   OauthGoogleCallbackRoute: typeof OauthGoogleCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/meds': {
       id: '/meds'
       path: '/meds'
@@ -208,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoryRoute: HistoryRoute,
   MedsRoute: MedsRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   ApiExportRoute: ApiExportRoute,
   OauthGoogleCallbackRoute: OauthGoogleCallbackRoute,
 }

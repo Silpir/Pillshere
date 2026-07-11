@@ -76,6 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             </NavLink>
             <NavLink to="/history">History</NavLink>
+            <NavLink to="/settings">Settings</NavLink>
             <ThemeToggle />
           </nav>
         </div>

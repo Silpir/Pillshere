@@ -9,14 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MedsRouteImport } from './routes/meds'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedsIndexRouteImport } from './routes/meds.index'
 import { Route as MedsNewRouteImport } from './routes/meds.new'
 import { Route as ApiExportRouteImport } from './routes/api/export'
+import { Route as OauthGoogleCallbackRouteImport } from './routes/oauth.google.callback'
 import { Route as MedsIdEditRouteImport } from './routes/meds.$id.edit'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MedsRoute = MedsRouteImport.update({
   id: '/meds',
   path: '/meds',
@@ -47,6 +54,11 @@ const ApiExportRoute = ApiExportRouteImport.update({
   path: '/api/export',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthGoogleCallbackRoute = OauthGoogleCallbackRouteImport.update({
+  id: '/oauth/google/callback',
+  path: '/oauth/google/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MedsIdEditRoute = MedsIdEditRouteImport.update({
   id: '/$id/edit',
   path: '/$id/edit',
@@ -57,28 +69,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/meds': typeof MedsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
   '/meds/$id/edit': typeof MedsIdEditRoute
+  '/oauth/google/callback': typeof OauthGoogleCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds': typeof MedsIndexRoute
   '/meds/$id/edit': typeof MedsIdEditRoute
+  '/oauth/google/callback': typeof OauthGoogleCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/meds': typeof MedsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/api/export': typeof ApiExportRoute
   '/meds/new': typeof MedsNewRoute
   '/meds/': typeof MedsIndexRoute
   '/meds/$id/edit': typeof MedsIdEditRoute
+  '/oauth/google/callback': typeof OauthGoogleCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,38 +104,53 @@ export interface FileRouteTypes {
     | '/'
     | '/history'
     | '/meds'
+    | '/settings'
     | '/api/export'
     | '/meds/new'
     | '/meds/'
     | '/meds/$id/edit'
+    | '/oauth/google/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/history'
+    | '/settings'
     | '/api/export'
     | '/meds/new'
     | '/meds'
     | '/meds/$id/edit'
+    | '/oauth/google/callback'
   id:
     | '__root__'
     | '/'
     | '/history'
     | '/meds'
+    | '/settings'
     | '/api/export'
     | '/meds/new'
     | '/meds/'
     | '/meds/$id/edit'
+    | '/oauth/google/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoryRoute: typeof HistoryRoute
   MedsRoute: typeof MedsRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   ApiExportRoute: typeof ApiExportRoute
+  OauthGoogleCallbackRoute: typeof OauthGoogleCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/meds': {
       id: '/meds'
       path: '/meds'
@@ -160,6 +193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/google/callback': {
+      id: '/oauth/google/callback'
+      path: '/oauth/google/callback'
+      fullPath: '/oauth/google/callback'
+      preLoaderRoute: typeof OauthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/meds/$id/edit': {
       id: '/meds/$id/edit'
       path: '/$id/edit'
@@ -188,18 +228,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoryRoute: HistoryRoute,
   MedsRoute: MedsRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   ApiExportRoute: ApiExportRoute,
+  OauthGoogleCallbackRoute: OauthGoogleCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

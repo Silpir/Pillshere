@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Pillshere</string>
+    <string name="channel_reminders">Medication reminders</string>
+    <string name="channel_reminders_desc">Time-based reminders for your medications.</string>
+    <string name="action_taken">Taken</string>
+    <string name="action_snooze">Snooze 10 min</string>
+</resources>

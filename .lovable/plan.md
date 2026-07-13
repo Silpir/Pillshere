@@ -1,88 +1,145 @@
-# Google Drive Backup — Implementation Plan (no Lovable Cloud)
+# Native Pillshere (Kotlin + Compose) — v1 plan
 
-Manual "Back up to Google Drive" from Settings. Each user signs in with their own Google account; snapshots are written to a **`Pillshere/` folder** in *their* Drive with a timestamped filename, and the app keeps the most recent 10. Restore lets the user pick a snapshot from a list. No backend database — Google tokens live in the browser only.
+A ground-up rewrite as a truly native Android app. New standalone repo, no code shared with this web/Capacitor project. Fresh install, no data migration. Ship the smallest thing that works, with tight failure surfaces.
 
-## User flow
+## Goals
 
-1. Settings → "Google Drive backup" section.
-2. First use → **Connect Google Drive** → Google OAuth consent (popup) → returns to app, shows "Connected as name@gmail.com".
-3. **Back up now** → ensures `Pillshere/` folder exists, uploads `pillshere-YYYY-MM-DD-HHmm.json` into it, prunes to newest 10, toast on success.
-4. **Restore** → lists snapshots in `Pillshere/` (name + date + size), user picks one → confirm dialog → downloads and runs the existing `actions.importJson` path (schema-validated).
-5. **Disconnect** clears tokens from localStorage and revokes the token with Google.
+- Native performance: cold start under 1 s on a mid-range phone, no WebView, no JS bridge.
+- Small APK: target under 5 MB download size.
+- Few moving parts: one process, one local database, one notification scheduler, zero backend.
+- Reliable reminders: notifications fire even when the app is killed and after reboot.
 
-## Auth model — PKCE, browser-only
+## Scope (v1)
 
-Because there is no backend, we use the **OAuth 2.0 Authorization Code + PKCE** flow for browser SPAs. This flow does not need a client secret.
+In:
+- Medications CRUD (name, dose, schedule times, pills per dose, supply).
+- Today screen: due doses, mark Taken / Skipped, undo.
+- History screen: dose log with filters by med and date.
+- Local notifications with Taken and Snooze 10 min actions, fired natively.
+- Dark mode following system.
 
-- OAuth client type in Google Cloud: **Web application** (Google supports PKCE for web clients; SPA-in-browser is the intended use).
-- Scope: `https://www.googleapis.com/auth/drive.file` — the app can only see/modify files it created (including `Pillshere/` since the app creates it). Cannot read the user's other Drive files.
-- Redirect URI: a static page in the app, e.g. `/oauth/google/callback`, that receives the `code` in the URL and posts it back to the opener window via `postMessage`.
-- Token exchange happens **client-side** with `code_verifier` (no secret involved).
-- Storage: `access_token`, `refresh_token`, `expires_at`, `email` in `localStorage` under `pillshere-gdrive-v1`. Auto-refresh with the refresh token when `expires_at` is near.
+Out (deferred, not in v1):
+- Google Drive backup / restore.
+- Refill planning UI (data model keeps supply, no dedicated refill flow yet).
+- Multi-device sync, accounts, cloud, analytics.
+- Tablet / foldable adaptive layouts beyond what Compose gives for free.
+- Widgets, Wear OS, iOS.
 
-## Prerequisites the user must do once (Google Cloud)
+## Tech choices (lean defaults)
 
-1. Create a project in Google Cloud Console.
-2. Enable **Google Drive API**.
-3. Configure the OAuth consent screen (external; add themselves as a test user while in "Testing" mode, or publish it).
-4. Create OAuth 2.0 Client ID → **Web application**.
-5. Authorized JavaScript origins:
-   - `http://localhost:8080`
-   - `https://<published-domain>`
-6. Authorized redirect URIs:
-   - `http://localhost:8080/oauth/google/callback`
-   - `https://<published-domain>/oauth/google/callback`
-7. Copy the **Client ID** only. Paste it into the app's Settings → Google Drive → *Google Client ID* field (stored in localStorage). No client secret is used.
+| Concern | Choice | Why |
+| --- | --- | --- |
+| Language | Kotlin 2.x | Google standard. |
+| UI | Jetpack Compose + Material 3 | Less code than XML, matches system look. |
+| Min / target SDK | minSdk 26 (Android 8), targetSdk 35 | Covers ~97% of devices, drops legacy alarm quirks. |
+| Architecture | Single-activity, MVVM with `ViewModel` + `StateFlow` | Standard, no extra libs. |
+| DI | Manual constructor injection via a small `AppContainer` | No Hilt / Koin — fewer failure points for a small app. |
+| Persistence | Room (SQLite) | Type-safe, migrations built in, better than raw SharedPreferences for logs. |
+| Preferences | DataStore (Preferences) | Theme + first-run flags only. |
+| Navigation | Compose Navigation (`androidx.navigation:navigation-compose`) | Type-safe routes, no third-party router. |
+| Concurrency | Kotlin coroutines + `Flow` | Native, no RxJava. |
+| Reminders | `AlarmManager` with `setExactAndAllowWhileIdle` + `BroadcastReceiver` + `NotificationManagerCompat` | Fires reliably when app is killed; no Google Play Services dependency. |
+| Reboot survival | `BOOT_COMPLETED` receiver reschedules from Room | Standard pattern. |
+| Build | Gradle Kotlin DSL + version catalog (`libs.versions.toml`) | Modern default. |
+| Testing | JUnit4 + Compose UI test + Room in-memory tests | Enough for v1. |
+| Lint / format | Android Lint + ktlint | Catches common issues in CI. |
+| CI | GitHub Actions: assemble debug + unit tests on PR | Cheap safety net. |
 
-Client ID is a public value; PKCE prevents an attacker from redeeming an intercepted code.
+Explicitly rejected for v1: Hilt, WorkManager (AlarmManager is a better fit for exact-time reminders), Retrofit / OkHttp (no network), Firebase, Crashlytics, Coil (no remote images yet), Ktor, KMP, Compose Multiplatform.
 
-## Files
+## Repo layout (new repo)
 
-- **`src/routes/oauth.google.callback.tsx`** — new route. Reads `code` + `state` from URL, matches state against `sessionStorage`, `postMessage`s the code back to `window.opener`, closes the popup. Fallback: if not opened as popup, shows a "return to Settings" message.
-- **`src/lib/drive/oauth.ts`** — PKCE helpers (`generateVerifier`, `challengeFromVerifier` via `crypto.subtle`), `startAuth()` (opens popup + waits for `postMessage`), `exchangeCode()`, `refreshToken()`, `revoke()`.
-- **`src/lib/drive/tokens.ts`** — localStorage read/write, `getValidAccessToken()` (refreshes if needed), `clearTokens()`.
-- **`src/lib/drive/api.ts`** — thin `fetch` wrappers around `googleapis.com/drive/v3` and `/upload/drive/v3`:
-  - `ensurePillshereFolder()` → `files.list?q="name='Pillshere' and mimeType='application/vnd.google-apps.folder' and trashed=false"`, create if missing (`mimeType: 'application/vnd.google-apps.folder'`, `name: 'Pillshere'`), cache folder ID in localStorage.
-  - `uploadBackup(json)` → multipart upload with parent = Pillshere folder ID, `name: 'pillshere-YYYY-MM-DD-HHmm.json'`.
-  - `listBackups()` → `files.list?q="'<folderId>' in parents and trashed=false"&orderBy=createdTime desc&fields=files(id,name,size,createdTime)`.
-  - `downloadBackup(fileId)` → `files/{id}?alt=media`.
-  - `deleteBackup(fileId)` → `DELETE files/{id}`.
-  - `pruneBackups(maxKeep = 10)` → delete oldest beyond N.
-  - `getUserEmail()` → `https://www.googleapis.com/oauth2/v2/userinfo` (uses same token; needs the implicit `openid email` scope added).
-- **`src/components/drive-backup-card.tsx`** — UI: client-ID input (if not set), Connect/Disconnect, connection status with email, Back up now button, snapshots list with Restore per row. Uses TanStack Query.
-- **`src/routes/settings.tsx`** — new route hosting the card, added to the app nav.
+```text
+pillshere-android/
+  app/
+    src/main/
+      java/app/pillshere/
+        PillshereApp.kt          // Application, builds AppContainer
+        di/AppContainer.kt       // manual DI
+        data/
+          db/PillshereDb.kt      // Room database + DAOs
+          db/entities/*.kt       // Medication, DoseLog
+          repo/MedRepository.kt
+          repo/DoseRepository.kt
+          prefs/SettingsStore.kt // DataStore
+        domain/
+          Schedule.kt            // pure functions: next fire times, low supply
+        notifications/
+          Reminders.kt           // schedule/cancel via AlarmManager
+          ReminderReceiver.kt    // BroadcastReceiver -> post notification
+          ActionReceiver.kt      // Taken / Snooze actions
+          BootReceiver.kt        // reschedule on BOOT_COMPLETED
+        ui/
+          theme/                 // Material 3 theme, dark mode
+          today/TodayScreen.kt + ViewModel
+          meds/MedListScreen.kt + MedEditScreen.kt + ViewModels
+          history/HistoryScreen.kt + ViewModel
+          nav/NavGraph.kt
+      res/                       // icons, strings, notification channel names
+      AndroidManifest.xml
+    build.gradle.kts
+  gradle/libs.versions.toml
+  settings.gradle.kts
+  build.gradle.kts
+  .github/workflows/android.yml  // assembleDebug + test
+  README.md
+```
 
-## Snapshot retention
+One Gradle module. No feature modules — overkill at this size.
 
-After each successful upload: list, sort by `createdTime` desc, delete anything past index 9. Failures to prune are non-fatal (log + toast warning; the upload itself already succeeded).
+## Data model
 
-## Restore
+Room entities:
 
-Uses the existing validated import path in `src/lib/medications/store.ts` → `actions.importJson(raw)`, which schema-validates every field via `appStateSchema`. Confirm dialog warns that current data will be replaced.
+- `Medication(id, name, dosageText, pillsPerDose, currentPills, lowSupplyThreshold, times: List<LocalTime> (TypeConverter), createdAt, archivedAt?)`
+- `DoseLog(id, medId FK, scheduledFor: Instant, actedAt: Instant, status: TAKEN|SKIPPED|SNOOZED, pillsConsumed)`
 
-## Security notes
+Indexes on `DoseLog.medId` and `DoseLog.scheduledFor`. `Instant` and `LocalTime` stored as ISO strings via TypeConverters.
 
-- `drive.file` scope keeps the blast radius to files the app created (including the `Pillshere/` folder it creates).
-- PKCE means an intercepted `code` cannot be redeemed without the in-memory verifier.
-- OAuth `state` is a random value in `sessionStorage`; callback rejects mismatches.
-- The callback route only accepts `postMessage` targeted to the exact app origin.
-- No client secret in the codebase — it is not required for PKCE.
-- Tokens sit in `localStorage`, same trust boundary as the medication data itself. Disconnect explicitly revokes the token with Google.
-- The existing `appStateSchema` re-validates every restored file, so a tampered Drive file cannot poison state.
+## Reminder engine
 
-## Capacitor / Android note
+- On med save: compute upcoming fire times for the next 48 h, schedule one `PendingIntent` per (medId, scheduledFor) with `AlarmManager.setExactAndAllowWhileIdle`.
+- `ReminderReceiver` posts a notification with two actions:
+  - Taken → `ActionReceiver` inserts `DoseLog`, decrements `currentPills`, cancels notification.
+  - Snooze 10 min → reschedules a single alarm at `now + 10 min`.
+- After firing, the receiver schedules the next occurrence for that med.
+- `BootReceiver` (BOOT_COMPLETED) walks all active meds and reschedules the next 48 h window.
+- On Android 12+, request `SCHEDULE_EXACT_ALARM` (or fall back to `setAndAllowWhileIdle` if denied) and surface a settings deep-link in a small banner.
+- One `NotificationChannel` (`reminders`, importance HIGH) created in `Application.onCreate`.
 
-The popup + `postMessage` flow works in the standard Android WebView but external browser redirects (Custom Tabs) are more robust on device. For v1 we ship the popup flow, which works on desktop web and inside the Capacitor WebView. If Android users hit consent-screen issues, a follow-up can switch to `@capacitor/browser` + a custom URL scheme.
+## UI
 
-## Out of scope
+Three top-level destinations in a bottom nav: Today, Meds, History. Compose Navigation with typed routes. Edit / new med is a full-screen route pushed from Meds.
 
-- Cross-device live sync / conflict resolution.
-- Server-side encryption of the JSON (data is in the user's own Drive; can add passphrase-based encryption later).
-- Native Google Sign-In SDK on Android.
-- Any Lovable Cloud / Supabase usage — explicitly not part of this plan.
+Theme: Material 3, system dark mode, no custom dynamic color for v1 (keeps look consistent across OEM skins).
 
-## Files touched (summary)
+## Performance and leanness rules
 
-- **New:** `src/routes/oauth.google.callback.tsx`, `src/routes/settings.tsx`, `src/components/drive-backup-card.tsx`, `src/lib/drive/oauth.ts`, `src/lib/drive/tokens.ts`, `src/lib/drive/api.ts`.
-- **Edited:** `src/components/app-shell.tsx` (add Settings nav link), possibly `src/start.ts` CSP `connect-src` already allows `https:` so no change needed; `frame-src` for the OAuth popup is not needed (it's a top-level window).
-- **No secrets** stored via Lovable — the Google Client ID is entered by each user in Settings and lives in their own localStorage.
+- No reflection-based JSON. No Gson / Moshi in v1 (nothing to serialize outside Room).
+- No image loading library — icons are vector drawables shipped in `res/drawable`.
+- R8 full mode enabled for release, resource shrinking on.
+- Baseline profile added once the UI stabilizes (post v1 optional).
+- Single `Activity`, no fragments.
+
+## Failure-surface reduction
+
+- One dependency per concern (see table). No overlapping libraries.
+- No network code → no TLS / retry / offline logic to get wrong.
+- All time math in one file (`domain/Schedule.kt`) with unit tests.
+- All alarm scheduling in one file (`notifications/Reminders.kt`) with instrumentation tests for a happy-path fire + Taken action.
+- Migrations: start at Room schema v1, export schema to `app/schemas/` from day one so future migrations are diffable.
+
+## Milestones
+
+1. Bootstrap repo: Gradle, Compose, Room, Navigation, Material 3, CI. Empty app launches to Today.
+2. Meds CRUD + Today (in-memory schedule preview, no alarms yet).
+3. AlarmManager + notification channel + Taken/Snooze actions + Boot receiver.
+4. History screen + undo.
+5. Dark theme polish, exact-alarm permission UX, R8, README with build/run instructions.
+
+## What I need from you before starting
+
+- Confirm the package id — proposal: `app.pillshere` (drops the `lovable` segment since it's a new repo).
+- Confirm minSdk 26 is fine (drops Android 7 and older, ~3% of devices globally, near-zero in practice for a new install).
+
+If both are yes, I'll scaffold the new repo per the layout above and drive it milestone by milestone.

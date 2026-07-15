@@ -1,124 +1,80 @@
 # Pillshere
 
-Lightweight, local-first medication reminder & adherence tracker.
-All data lives in your browser (or on your device on Android) — no accounts,
-no backend, no cloud sync.
+Lightweight, local-first medication reminder & adherence tracker for Android.
+All data lives on-device (Room / SQLite) — no accounts, no backend, no cloud sync.
+Optional Google Drive backup writes a JSON snapshot to a dedicated `Pillshere/`
+folder in the user's Drive.
 
-## Features
+> The web/Capacitor build has been retired. The app is now a native Android
+> project under [`android-native/`](./android-native). Legacy web sources in
+> `src/` remain only as reference and are not shipped.
 
-- Multiple medications with flexible schedules (daily, weekdays, every N days, PRN)
-- Pill supply tracking with refill reminders
-- Dose history, adherence stats, streaks
-- Export as JSON or plain text, or email a snapshot
-- Light / dark / system theme
-- Native Android build with local notifications (Taken / Snooze actions)
+## Features (v1)
 
-## Web development
+- Medications CRUD with flexible schedules
+- Today + History screens with adherence log
+- Local notifications with **Taken** and **Snooze 10 min** actions (fire even
+  when the app is closed, survive reboots)
+- Light / dark theme following the system
+- Optional Google Drive JSON backup into a `Pillshere/` folder
 
-```bash
-bun install
-bun run dev       # start dev server
-bun run build     # production web build
-bun run android:web # Android web bundle (dist/capacitor)
-```
+## Stack
 
-## Android app
+- Kotlin 2.0, Jetpack Compose, Material 3
+- Single-activity, MVVM (`ViewModel` + `StateFlow`)
+- Room (SQLite) for meds + dose log, DataStore for preferences
+- `AlarmManager` + `BroadcastReceiver` for reminders (no Play Services)
+- Manual DI via `AppContainer` — no Hilt/Koin
+- `minSdk 26`, `targetSdk 35`
 
-Pillshere ships as a native Android app via [Capacitor](https://capacitorjs.com/).
-Same web UI, same local data — with OS-level notifications that fire even when
-the app is closed.
+## Build locally
 
-### Prerequisites
-
-- [Android Studio](https://developer.android.com/studio) (latest stable)
-- JDK 17+
-- An Android emulator or a USB-connected device with USB debugging enabled
-
-### One-time setup
+Prerequisites: **JDK 17**, **Android SDK (API 35)**, and Android Studio Koala
+or newer (only if you want the IDE — Gradle alone is enough to produce an APK).
 
 ```bash
-bun install
-bun run android:add      # builds dist/capacitor/index.html, creates android/, then syncs plugins
-bun run android:open     # opens Android Studio
+cd android-native
+./gradlew assembleDebug          # debug APK
+./gradlew assembleRelease        # unsigned release APK
+./gradlew installDebug           # install on a connected device/emulator
 ```
 
-In Android Studio, click **Run** to launch on an emulator or the connected device.
+Output APKs land in:
 
-If `bunx cap add android` was run before a successful build, Capacitor may leave a
-half-created `android/` folder and fail with missing `index.html` or
-`capacitor.plugins.json`. Delete that folder and use the project script instead:
-
-```bat
-rmdir /s /q android
-bun run android:add
-bun run android:open
+```
+android-native/app/build/outputs/apk/debug/app-debug.apk
+android-native/app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
-`dist/` is ignored by Git, so every fresh checkout must run a local Android web
-build before Capacitor can copy web assets into Android.
+If the Gradle wrapper jar is missing after a fresh clone, run
+`gradle wrapper` once with a locally installed Gradle, then use `./gradlew`
+for every subsequent command.
 
-### After each code change
+## Pulling an APK from CI
 
-```bash
-bun run android:sync
-```
+Every push to `main` triggers the `android.yml` workflow, which runs
+`./gradlew assembleDebug` and uploads the resulting APK as a build artifact.
 
-> On Windows without Bun, use `npx @capacitor/cli <cmd>` instead of `bunx cap <cmd>`.
-> Plain `npx cap ...` resolves to an unrelated npm package named `cap` and will fail.
+1. Open the repo on GitHub → **Actions** tab.
+2. Pick the latest successful **Android** run for the commit you want.
+3. Scroll to **Artifacts** and download **`pillshere-debug-apk`**.
+4. Unzip it — inside is `app-debug.apk`.
+5. Transfer to your device and install:
 
-Then hit Run in Android Studio again.
+   ```bash
+   adb install -r app-debug.apk
+   # or copy to the phone and tap it (allow "install from unknown sources")
+   ```
 
-### Gradle: "Namespace not specified"
+Signed release builds for the Play Store are produced locally via
+**Android Studio → Build → Generate Signed Bundle / APK** and are not
+published as CI artifacts.
 
-Android Gradle Plugin 8+ requires an explicit `namespace` in
-`android/app/build.gradle`. If Capacitor's scaffold omits it, open the file and
-ensure the `android { ... }` block starts with:
+## Data ownership
 
-```gradle
-android {
-    namespace = "app.lovable.pillshere"
-    ...
-}
-```
-
-Also confirm `android/app/src/main/AndroidManifest.xml` has no `package="..."`
-attribute on its root `<manifest>` tag — AGP 8+ forbids setting both. The
-`android/` folder is gitignored, so re-apply this edit whenever you delete and
-re-scaffold the native project.
-
-### Local notifications
-
-On first launch, the app asks for notification permission. Reminders are
-scheduled natively and fire even when the app is closed. Each reminder shows:
-
-- **Taken** — logs the dose and decrements your pill supply
-- **Snooze 10 min** — re-fires the reminder in 10 minutes
-
-On the web build these are a no-op (in-app toasts only).
-
-### Publishing to the Play Store
-
-1. Open the project in Android Studio.
-2. Build → **Generate Signed Bundle / APK** → choose **Android App Bundle**.
-3. Create or select a signing key, then follow the wizard.
-4. Upload the resulting `.aab` in the Play Console.
-
-The package id is `app.lovable.pillshere`. Change it in `capacitor.config.ts`
-**before your first publish** if you want a different identifier.
-
-### Data ownership
-
-All medication and history data is stored on-device (localStorage inside the
-WebView). Uninstalling the app deletes the data. Use **History → Data → Export**
-to back it up before switching devices or reinstalling.
-
-## Security
-
-- Every server response (including file downloads) sets CSP, X-Content-Type-Options,
-  X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS, COOP, and DNS-prefetch controls.
-- All form input is validated with Zod; imports are re-validated against the same schema.
-- Automated CI scans run `bun audit`, `npm audit`, OSV Scanner, CodeQL, and Gitleaks
-  on every push and weekly.
+Everything is stored in the app's private Room database. Uninstalling the
+app deletes the data. Use **Settings → Backup to Drive** to snapshot to
+your Google Drive `Pillshere/` folder before wiping or switching devices.
 
 ## License
 

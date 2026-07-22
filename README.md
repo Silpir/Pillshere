@@ -36,11 +36,22 @@ installed.
 The Gradle wrapper is included in the repo, so you do **not** need a system-wide
 Gradle installation.
 
-### 1. Tell Gradle where your Android SDK is
+### 1. Verify your Android SDK is configured
+
+Run the pre-flight check. It will tell you exactly what to fix before Gradle
+throws a cryptic error:
+
+```bash
+node scripts/check-android-env.mjs
+```
+
+### 2. Tell Gradle where your Android SDK is
 
 Gradle needs either an `ANDROID_HOME` environment variable pointing to the SDK,
-or a `local.properties` file inside `android-native/`. If you see
-**"SDK location not found"**, do one of the following:
+or a `local.properties` file inside `android-native/`. **This step is required** —
+the build will fail with `FileNotFoundException: local.properties` if you skip it.
+
+If you see **"SDK location not found"**, do one of the following:
 
 **Option A — environment variable (works on all platforms):**
 
@@ -58,9 +69,12 @@ slashes or double backslashes:
 sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
 ```
 
+Replace `<you>` with your actual Windows user name. If you installed Android
+Studio, confirm the exact path under **Settings → Languages & Frameworks → Android SDK**.
+
 > `local.properties` is already gitignored, so it will not be committed.
 
-### 2. Build the APK
+### 3. Build the APK
 
 On macOS / Linux:
 

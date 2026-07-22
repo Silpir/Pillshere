@@ -32,12 +32,29 @@ folder in the user's Drive.
 Prerequisites: **JDK 17**, **Android SDK (API 35)**, and Android Studio Koala
 or newer (only if you want the IDE — Gradle alone is enough to produce an APK).
 
+The Gradle wrapper is included in the repo, so you do **not** need a system-wide
+Gradle installation.
+
+On macOS / Linux:
+
 ```bash
 cd android-native
 ./gradlew assembleDebug          # debug APK
 ./gradlew assembleRelease        # unsigned release APK
 ./gradlew installDebug           # install on a connected device/emulator
 ```
+
+On Windows:
+
+```bat
+cd android-native
+gradlew.bat assembleDebug
+gradlew.bat assembleRelease
+gradlew.bat installDebug
+```
+
+The first run downloads the Gradle distribution automatically, so it may take a
+minute.
 
 Output APKs land in:
 
@@ -46,17 +63,13 @@ android-native/app/build/outputs/apk/debug/app-debug.apk
 android-native/app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
-If the Gradle wrapper jar is missing after a fresh clone, run
-`gradle wrapper` once with a locally installed Gradle, then use `./gradlew`
-for every subsequent command.
-
 ## Pulling an APK from CI
 
 Every push to `main` triggers the `android.yml` workflow, which runs
 `./gradlew assembleDebug` and uploads the resulting APK as a build artifact.
 
 1. Open the repo on GitHub → **Actions** tab.
-2. Pick the latest successful **Android** run for the commit you want.
+2. Pick the latest successful **Android native build** run for the commit you want.
 3. Scroll to **Artifacts** and download **`pillshere-debug-apk`**.
 4. Unzip it — inside is `app-debug.apk`.
 5. Transfer to your device and install:

@@ -29,11 +29,38 @@ folder in the user's Drive.
 
 ## Build locally
 
-Prerequisites: **JDK 17**, **Android SDK (API 35)**, and Android Studio Koala
-or newer (only if you want the IDE — Gradle alone is enough to produce an APK).
+Prerequisites: **JDK 17** and **Android SDK (API 35)**. Android Studio Koala
+or newer is optional — you can build from the command line once the SDK is
+installed.
 
 The Gradle wrapper is included in the repo, so you do **not** need a system-wide
 Gradle installation.
+
+### 1. Tell Gradle where your Android SDK is
+
+Gradle needs either an `ANDROID_HOME` environment variable pointing to the SDK,
+or a `local.properties` file inside `android-native/`. If you see
+**"SDK location not found"**, do one of the following:
+
+**Option A — environment variable (works on all platforms):**
+
+- Windows (PowerShell): `$env:ANDROID_HOME = "C:\Users\<you>\AppData\Local\Android\Sdk"`
+- Windows (cmd.exe): `set ANDROID_HOME=C:\Users\<you>\AppData\Local\Android\Sdk`
+- macOS/Linux: `export ANDROID_HOME=$HOME/Library/Android/sdk` (macOS) or
+  `$HOME/Android/Sdk` (Linux).
+
+**Option B — `local.properties` file (recommended for Windows users):**
+
+Create `android-native/local.properties` with exactly this line, using forward
+slashes or double backslashes:
+
+```properties
+sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
+```
+
+> `local.properties` is already gitignored, so it will not be committed.
+
+### 2. Build the APK
 
 On macOS / Linux:
 

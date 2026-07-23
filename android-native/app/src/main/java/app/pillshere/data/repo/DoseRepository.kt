@@ -14,6 +14,9 @@ class DoseRepository(
 ) {
     fun observeRecent(): Flow<List<DoseLog>> = doseDao.observeRecent()
 
+    suspend fun wasActed(medId: String, scheduledFor: Instant): Boolean =
+        doseDao.countFor(medId, scheduledFor) > 0
+
     suspend fun recordTaken(medId: String, scheduledFor: Instant): DoseLog {
         val med = medDao.byId(medId) ?: error("Medication $medId not found")
         val entry = DoseLog(

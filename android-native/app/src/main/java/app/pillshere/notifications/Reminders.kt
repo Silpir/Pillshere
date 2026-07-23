@@ -33,6 +33,25 @@ class Reminders(private val context: Context) {
         } else {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMs, pi)
         }
+        scheduleMissedCheck(medId, at)
+    }
+
+    /** Fires a follow-up ~15 min after the scheduled time. If the user
+     *  hasn't confirmed Taken/Skipped by then, a missed-dose notification
+     *  is posted. */
+    fun scheduleMissedCheck(medId: String, at: Instant) {
+        val pi = missedIntent(medId, at)
+        val triggerMs = at.plusSeconds(MISSED_DELAY_MIN * 60L).toEpochMilli()
+        val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
+        if (canExact) {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMs, pi)
+        } else {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMs, pi)
+        }
+    }
+
+    fun cancelMissedCheck(medId: String, at: Instant) {
+        am.cancel(missedIntent(medId, at))
     }
 
     fun cancel(medId: String, at: Instant) {
@@ -50,6 +69,17 @@ class Reminders(private val context: Context) {
         return PendingIntent.getBroadcast(context, requestCode(medId, at), intent, flags)
     }
 
+    private fun missedIntent(medId: String, at: Instant): PendingIntent {
+        val intent = Intent(context, MissedCheckReceiver::class.java).apply {
+            action = ACTION_MISSED_CHECK
+            putExtra(EXTRA_MED_ID, medId)
+            putExtra(EXTRA_SCHEDULED_FOR_MS, at.toEpochMilli())
+        }
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        // Offset request code so it doesn't collide with the primary fire alarm.
+        return PendingIntent.getBroadcast(context, requestCode(medId, at) xor 0x4d495353, intent, flags)
+    }
+
     private fun requestCode(medId: String, at: Instant): Int {
         // Stable per (medId, minute) so re-schedules replace the same alarm.
         val minute = at.toEpochMilli() / 60_000L
@@ -58,7 +88,9 @@ class Reminders(private val context: Context) {
 
     companion object {
         const val ACTION_FIRE = "app.pillshere.action.FIRE"
+        const val ACTION_MISSED_CHECK = "app.pillshere.action.MISSED_CHECK"
         const val EXTRA_MED_ID = "medId"
         const val EXTRA_SCHEDULED_FOR_MS = "scheduledForMs"
+        const val MISSED_DELAY_MIN = 15L
     }
 }

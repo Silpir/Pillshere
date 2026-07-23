@@ -15,6 +15,9 @@ interface DoseLogDao {
     @Query("SELECT * FROM dose_log WHERE medId = :medId ORDER BY actedAt DESC")
     fun observeForMed(medId: String): Flow<List<DoseLog>>
 
+    @Query("SELECT COUNT(*) FROM dose_log WHERE medId = :medId AND scheduledFor = :scheduledFor")
+    suspend fun countFor(medId: String, scheduledFor: java.time.Instant): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: DoseLog)
 

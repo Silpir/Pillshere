@@ -24,12 +24,18 @@ class ActionReceiver : BroadcastReceiver() {
                     app.container.doseRepository.recordTaken(
                         medId, Instant.ofEpochMilli(scheduledForMs),
                     )
+                    app.container.reminders.cancelMissedCheck(
+                        medId, Instant.ofEpochMilli(scheduledForMs),
+                    )
                     if (notifId != -1) NotificationManagerCompat.from(context).cancel(notifId)
                 } finally { pending.finish() }
             }
             ACTION_SNOOZE -> CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val fireAt = Instant.now().plusSeconds(10 * 60)
+                    app.container.reminders.cancelMissedCheck(
+                        medId, Instant.ofEpochMilli(scheduledForMs),
+                    )
                     app.container.reminders.scheduleOne(medId, fireAt)
                     if (notifId != -1) NotificationManagerCompat.from(context).cancel(notifId)
                 } finally { pending.finish() }

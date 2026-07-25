@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
@@ -40,6 +43,7 @@ import app.pillshere.domain.Schedule
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.Duration
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -52,6 +56,18 @@ fun TodayScreen(container: AppContainer) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val fmt = remember { DateTimeFormatter.ofPattern("h:mm a").withZone(ZoneId.systemDefault()) }
+    val zone = remember { ZoneId.systemDefault() }
+    val dayFmt = remember { DateTimeFormatter.ofPattern("EEE, MMM d") }
+    val allMeds by container.medRepository.observeAll().collectAsState(initial = emptyList())
+    var selectedDay by remember { mutableStateOf(LocalDate.now()) }
+
+    val timeline = remember(doseLog, selectedDay, allMeds) {
+        val names = allMeds.associate { it.id to it.name }
+        doseLog
+            .filter { it.actedAt.atZone(zone).toLocalDate() == selectedDay }
+            .sortedBy { it.actedAt }
+            .map { Triple(fmt.format(it.actedAt), names[it.medId] ?: "Medication", it.status) }
+    }
 
     val dueToday = remember(meds) {
         val nowInstant = Instant.now()
@@ -89,12 +105,12 @@ fun TodayScreen(container: AppContainer) {
         }
     }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(Modifier.fillMaxSize()) {
+      Column(Modifier.weight(1f).padding(16.dp)) {
         Text("Today", style = MaterialTheme.typography.headlineMedium)
         if (dueToday.isEmpty()) {
             Text("Nothing scheduled in the next 24 hours.", Modifier.padding(top = 16.dp))
-            return@Column
-        }
+        } else {
         // Few cards → let each card expand to fill the screen. Many cards →
         // scroll at their natural size. `weight` inside LazyColumn is not
         // valid, so switch containers.
@@ -141,6 +157,15 @@ fun TodayScreen(container: AppContainer) {
                 }
             }
         }
+        }
+      }
+      DayTimeline(
+        label = if (selectedDay == LocalDate.now()) "Today" else selectedDay.format(dayFmt),
+        entries = timeline,
+        onPrev = { selectedDay = selectedDay.minusDays(1) },
+        onNext = { if (selectedDay.isBefore(LocalDate.now())) selectedDay = selectedDay.plusDays(1) },
+        canGoNext = selectedDay.isBefore(LocalDate.now()),
+      )
     }
 
     val current = pending
@@ -159,6 +184,64 @@ fun TodayScreen(container: AppContainer) {
                 TextButton(onClick = { pending = null; warning = null }) { Text("Cancel") }
             },
         )
+    }
+}
+
+@Composable
+private fun DayTimeline(
+    label: String,
+    entries: List<Triple<String, String, DoseStatus>>,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+    canGoNext: Boolean,
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Activity · $label",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onPrev) { Text("‹ Prev") }
+            TextButton(onClick = onNext, enabled = canGoNext) { Text("Next ›") }
+        }
+        if (entries.isEmpty()) {
+            Text(
+                "No logged actions for this day.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+          Column(Modifier.heightIn(max = 168.dp).verticalScroll(rememberScrollState())) {
+            entries.forEach { (time, name, status) ->
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(time, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        name,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        when (status) {
+                            DoseStatus.TAKEN -> "Taken"
+                            DoseStatus.SKIPPED -> "Skipped"
+                            DoseStatus.SNOOZED -> "Snoozed"
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = when (status) {
+                            DoseStatus.TAKEN -> MaterialTheme.colorScheme.primary
+                            DoseStatus.SKIPPED -> MaterialTheme.colorScheme.error
+                            DoseStatus.SNOOZED -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+            }
+          }
+        }
     }
 }
 

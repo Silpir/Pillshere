@@ -36,8 +36,13 @@ class MissedCheckReceiver : BroadcastReceiver() {
 
                 val n = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
                     .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                    .setContentTitle("${med.name} hasn't been taken")
-                    .setContentText("Scheduled at ${fmt.format(scheduledFor)}")
+                    .setContentTitle("Missed dose")
+                    .setContentText("${med.name} hasn't been taken at ${fmt.format(scheduledFor)}")
+                    .setStyle(
+                        NotificationCompat.BigTextStyle().bigText(
+                            "${med.name} hasn't been taken at ${fmt.format(scheduledFor)}"
+                        )
+                    )
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setCategory(NotificationCompat.CATEGORY_REMINDER)
                     .setAutoCancel(true)

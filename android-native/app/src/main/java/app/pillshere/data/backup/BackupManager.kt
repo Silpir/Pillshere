@@ -53,15 +53,11 @@ class BackupManager(private val context: Context, private val db: PillshereDb) {
         val dosesArr = root.optJSONArray("doseLog") ?: JSONArray()
         for (i in 0 until dosesArr.length()) doses += doseFromJson(dosesArr.getJSONObject(i))
 
-        db.runInTransaction {
-            // Doses have FK on medications; clear doses first, then meds.
-            kotlinx.coroutines.runBlocking {
-                db.doseLogDao().clear()
-                db.medicationDao().clear()
-                meds.forEach { db.medicationDao().upsert(it) }
-                doses.forEach { db.doseLogDao().insert(it) }
-            }
-        }
+        // Doses have a FK to medications; clear child rows first.
+        db.doseLogDao().clear()
+        db.medicationDao().clear()
+        meds.forEach { db.medicationDao().upsert(it) }
+        doses.forEach { db.doseLogDao().insert(it) }
         meds.size to doses.size
     }
 

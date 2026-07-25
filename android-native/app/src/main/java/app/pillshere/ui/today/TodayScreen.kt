@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
@@ -209,6 +212,7 @@ private fun DayTimeline(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
+          Column(Modifier.heightIn(max = 168.dp).verticalScroll(rememberScrollState())) {
             entries.forEach { (time, name, status) ->
                 Row(
                     Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -236,6 +240,7 @@ private fun DayTimeline(
                     )
                 }
             }
+          }
         }
     }
 }

@@ -102,12 +102,12 @@ fun TodayScreen(container: AppContainer) {
         }
     }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(Modifier.fillMaxSize()) {
+      Column(Modifier.weight(1f).padding(16.dp)) {
         Text("Today", style = MaterialTheme.typography.headlineMedium)
         if (dueToday.isEmpty()) {
             Text("Nothing scheduled in the next 24 hours.", Modifier.padding(top = 16.dp))
-            return@Column
-        }
+        } else {
         // Few cards → let each card expand to fill the screen. Many cards →
         // scroll at their natural size. `weight` inside LazyColumn is not
         // valid, so switch containers.
@@ -154,15 +154,16 @@ fun TodayScreen(container: AppContainer) {
                 }
             }
         }
-    }
-
-    DayTimeline(
+        }
+      }
+      DayTimeline(
         label = if (selectedDay == LocalDate.now()) "Today" else selectedDay.format(dayFmt),
         entries = timeline,
         onPrev = { selectedDay = selectedDay.minusDays(1) },
         onNext = { if (selectedDay.isBefore(LocalDate.now())) selectedDay = selectedDay.plusDays(1) },
         canGoNext = selectedDay.isBefore(LocalDate.now()),
-    )
+      )
+    }
 
     val current = pending
     if (current != null) {

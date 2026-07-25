@@ -6,6 +6,7 @@ import app.pillshere.data.db.PillshereDb
 import app.pillshere.data.prefs.SettingsStore
 import app.pillshere.data.repo.DoseRepository
 import app.pillshere.data.repo.MedRepository
+import app.pillshere.data.backup.BackupManager
 import app.pillshere.notifications.Reminders
 
 /**
@@ -26,4 +27,5 @@ class AppContainer(context: Context) {
     val doseRepository = DoseRepository(db.doseLogDao(), db.medicationDao())
     val settings = SettingsStore(appContext)
     val reminders = Reminders(appContext)
+    val backup = BackupManager(appContext, db)
 }

@@ -18,6 +18,15 @@ interface DoseLogDao {
     @Query("SELECT COUNT(*) FROM dose_log WHERE medId = :medId AND scheduledFor = :scheduledFor")
     suspend fun countFor(medId: String, scheduledFor: java.time.Instant): Int
 
+    @Query("SELECT * FROM dose_log WHERE medId = :medId AND status = 'TAKEN' ORDER BY actedAt DESC LIMIT 1")
+    suspend fun lastTaken(medId: String): DoseLog?
+
+    @Query("SELECT * FROM dose_log")
+    suspend fun all(): List<DoseLog>
+
+    @Query("DELETE FROM dose_log")
+    suspend fun clear()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: DoseLog)
 

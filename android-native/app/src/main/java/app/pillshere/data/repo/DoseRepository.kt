@@ -17,6 +17,9 @@ class DoseRepository(
     suspend fun wasActed(medId: String, scheduledFor: Instant): Boolean =
         doseDao.countFor(medId, scheduledFor) > 0
 
+    /** Most-recent TAKEN entry for this medication, or null. */
+    suspend fun lastTaken(medId: String) = doseDao.lastTaken(medId)
+
     suspend fun recordTaken(medId: String, scheduledFor: Instant): DoseLog {
         val med = medDao.byId(medId) ?: error("Medication $medId not found")
         val entry = DoseLog(

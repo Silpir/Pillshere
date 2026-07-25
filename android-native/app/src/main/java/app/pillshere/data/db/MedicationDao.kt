@@ -28,4 +28,10 @@ interface MedicationDao {
 
     @Delete
     suspend fun delete(med: Medication)
+
+    @Query("SELECT * FROM medications")
+    suspend fun all(): List<Medication>
+
+    @Query("DELETE FROM medications")
+    suspend fun clear()
 }

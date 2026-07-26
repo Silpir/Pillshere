@@ -61,11 +61,13 @@ fun TodayScreen(container: AppContainer) {
     val dayFmt = remember { DateTimeFormatter.ofPattern("EEE, MMM d") }
     val allMeds by container.medRepository.observeAll().collectAsState(initial = emptyList())
     var selectedDay by remember { mutableStateOf(LocalDate.now()) }
+    var timelineFilter by remember { mutableStateOf<DoseStatus?>(null) }
 
-    val timeline = remember(doseLog, selectedDay, allMeds) {
+    val timeline = remember(doseLog, selectedDay, allMeds, timelineFilter) {
         val names = allMeds.associate { it.id to it.name }
         doseLog
             .filter { it.actedAt.atZone(zone).toLocalDate() == selectedDay }
+            .filter { timelineFilter == null || it.status == timelineFilter }
             .sortedBy { it.actedAt }
             .map { Triple(fmt.format(it.actedAt), names[it.medId] ?: "Medication", it.status) }
     }

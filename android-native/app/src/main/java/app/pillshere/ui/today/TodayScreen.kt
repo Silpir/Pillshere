@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.AlertDialog
@@ -60,11 +61,13 @@ fun TodayScreen(container: AppContainer) {
     val dayFmt = remember { DateTimeFormatter.ofPattern("EEE, MMM d") }
     val allMeds by container.medRepository.observeAll().collectAsState(initial = emptyList())
     var selectedDay by remember { mutableStateOf(LocalDate.now()) }
+    var timelineFilter by remember { mutableStateOf<DoseStatus?>(null) }
 
-    val timeline = remember(doseLog, selectedDay, allMeds) {
+    val timeline = remember(doseLog, selectedDay, allMeds, timelineFilter) {
         val names = allMeds.associate { it.id to it.name }
         doseLog
             .filter { it.actedAt.atZone(zone).toLocalDate() == selectedDay }
+            .filter { timelineFilter == null || it.status == timelineFilter }
             .sortedBy { it.actedAt }
             .map { Triple(fmt.format(it.actedAt), names[it.medId] ?: "Medication", it.status) }
     }
@@ -162,6 +165,8 @@ fun TodayScreen(container: AppContainer) {
       DayTimeline(
         label = if (selectedDay == LocalDate.now()) "Today" else selectedDay.format(dayFmt),
         entries = timeline,
+        filter = timelineFilter,
+        onFilterChange = { timelineFilter = it },
         onPrev = { selectedDay = selectedDay.minusDays(1) },
         onNext = { if (selectedDay.isBefore(LocalDate.now())) selectedDay = selectedDay.plusDays(1) },
         canGoNext = selectedDay.isBefore(LocalDate.now()),
@@ -191,6 +196,8 @@ fun TodayScreen(container: AppContainer) {
 private fun DayTimeline(
     label: String,
     entries: List<Triple<String, String, DoseStatus>>,
+    filter: DoseStatus?,
+    onFilterChange: (DoseStatus?) -> Unit,
     onPrev: () -> Unit,
     onNext: () -> Unit,
     canGoNext: Boolean,
@@ -205,9 +212,27 @@ private fun DayTimeline(
             TextButton(onClick = onPrev) { Text("‹ Prev") }
             TextButton(onClick = onNext, enabled = canGoNext) { Text("Next ›") }
         }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
+        ) {
+            listOf(
+                null to "All",
+                DoseStatus.TAKEN to "Taken",
+                DoseStatus.SKIPPED to "Skipped",
+                DoseStatus.SNOOZED to "Snoozed",
+            ).forEach { (status, name) ->
+                FilterChip(
+                    selected = filter == status,
+                    onClick = { onFilterChange(status) },
+                    label = { Text(name) },
+                )
+            }
+        }
         if (entries.isEmpty()) {
             Text(
-                "No logged actions for this day.",
+                if (filter == null) "No logged actions for this day."
+                else "No ${filter.name.lowercase().replaceFirstChar { it.uppercase() }} actions for this day.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

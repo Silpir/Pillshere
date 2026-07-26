@@ -196,6 +196,8 @@ fun TodayScreen(container: AppContainer) {
 private fun DayTimeline(
     label: String,
     entries: List<Triple<String, String, DoseStatus>>,
+    filter: DoseStatus?,
+    onFilterChange: (DoseStatus?) -> Unit,
     onPrev: () -> Unit,
     onNext: () -> Unit,
     canGoNext: Boolean,
@@ -210,9 +212,27 @@ private fun DayTimeline(
             TextButton(onClick = onPrev) { Text("‹ Prev") }
             TextButton(onClick = onNext, enabled = canGoNext) { Text("Next ›") }
         }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
+        ) {
+            listOf(
+                null to "All",
+                DoseStatus.TAKEN to "Taken",
+                DoseStatus.SKIPPED to "Skipped",
+                DoseStatus.SNOOZED to "Snoozed",
+            ).forEach { (status, name) ->
+                FilterChip(
+                    selected = filter == status,
+                    onClick = { onFilterChange(status) },
+                    label = { Text(name) },
+                )
+            }
+        }
         if (entries.isEmpty()) {
             Text(
-                "No logged actions for this day.",
+                if (filter == null) "No logged actions for this day."
+                else "No ${filter.name.lowercase().replaceFirstChar { it.uppercase() }} actions for this day.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

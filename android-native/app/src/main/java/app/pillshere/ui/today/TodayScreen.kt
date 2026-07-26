@@ -165,6 +165,8 @@ fun TodayScreen(container: AppContainer) {
       DayTimeline(
         label = if (selectedDay == LocalDate.now()) "Today" else selectedDay.format(dayFmt),
         entries = timeline,
+        filter = timelineFilter,
+        onFilterChange = { timelineFilter = it },
         onPrev = { selectedDay = selectedDay.minusDays(1) },
         onNext = { if (selectedDay.isBefore(LocalDate.now())) selectedDay = selectedDay.plusDays(1) },
         canGoNext = selectedDay.isBefore(LocalDate.now()),

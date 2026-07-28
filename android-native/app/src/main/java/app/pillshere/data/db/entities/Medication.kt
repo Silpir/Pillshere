@@ -17,4 +17,8 @@ data class Medication(
     val times: List<LocalTime>,
     val createdAt: Instant,
     val archivedAt: Instant? = null,
+    /** When false, no reminder or missed-dose notifications are posted. */
+    val notificationsEnabled: Boolean = true,
+    /** Minutes after the scheduled time before a missed-dose alert fires. */
+    val missedAfterMinutes: Int = 15,
 )

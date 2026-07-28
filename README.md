@@ -1,22 +1,27 @@
 # Pillshere
 
 Lightweight, local-first medication reminder & adherence tracker for Android.
-All data lives on-device (Room / SQLite) — no accounts, no backend, no cloud sync.
-Optional Google Drive backup writes a JSON snapshot to a dedicated `Pillshere/`
-folder in the user's Drive.
+All data lives on-device (Room / SQLite) — no accounts, no backend, no cloud.
 
 > The web/Capacitor build has been retired. The app is now a native Android
 > project under [`android-native/`](./android-native). Legacy web sources in
 > `src/` remain only as reference and are not shipped.
 
-## Features (v1)
+## Features
 
-- Medications CRUD with flexible schedules
-- Today + History screens with adherence log
-- Local notifications with **Taken** and **Snooze 10 min** actions (fire even
-  when the app is closed, survive reboots)
+- Medications CRUD with flexible schedules and start dates
+- **Today** screen showing scheduled doses for the day with action buttons
+- **History** screen showing the full adherence log
+- Compact day-by-day timeline on Today with filters: **All / Taken / Skipped / Snoozed**
+- Tap a timeline row to see exact timestamp, scheduled dose time, and snooze-until time
+- Confirmation prompt on the **Taken** button to cancel accidental taps
+- Double-tap prevention: warns if the same medication was already recorded as taken recently
+- Visual "Taken today" highlight on a dose after it is recorded
+- Dynamic dose cards that expand to fill the screen when only 1–2 are due
+- Local notifications with **Taken** and **Snooze 10 min** actions (fire even when the app is closed, survive reboots)
+- Missed-dose reminder notifications that include the medication name and scheduled HH:MM time
 - Light / dark theme following the system
-- Optional Google Drive JSON backup into a `Pillshere/` folder
+- Local JSON export/import of all medications and dose history through Android's Storage Access Framework
 
 ## Stack
 
@@ -38,8 +43,8 @@ Gradle installation.
 
 ### 1. Verify your Android SDK is configured
 
-Run the pre-flight check. It will tell you exactly what to fix before Gradle
-throws a cryptic error:
+Run the pre-flight check from the project root. It will tell you exactly what
+to fix before Gradle throws a cryptic error:
 
 ```bash
 node scripts/check-android-env.mjs
@@ -127,8 +132,8 @@ published as CI artifacts.
 ## Data ownership
 
 Everything is stored in the app's private Room database. Uninstalling the
-app deletes the data. Use **Settings → Backup to Drive** to snapshot to
-your Google Drive `Pillshere/` folder before wiping or switching devices.
+app deletes the data. Use **History → Export backup** to save a JSON file
+before wiping or switching devices, then restore it later with **History → Import backup**.
 
 ## License
 

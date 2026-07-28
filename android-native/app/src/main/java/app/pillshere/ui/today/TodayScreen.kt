@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,6 +51,11 @@ import java.time.format.DateTimeFormatter
 
 private data class DueDose(val med: Medication, val at: Instant)
 
+private data class TimelineRow(
+    val entry: app.pillshere.data.db.entities.DoseLog,
+    val medName: String,
+)
+
 @Composable
 fun TodayScreen(container: AppContainer) {
     val meds by container.medRepository.observeActive().collectAsState(initial = emptyList())
@@ -63,13 +69,18 @@ fun TodayScreen(container: AppContainer) {
     var selectedDay by remember { mutableStateOf(LocalDate.now()) }
     var timelineFilter by remember { mutableStateOf<DoseStatus?>(null) }
 
+    val fullFmt = remember {
+        DateTimeFormatter.ofPattern("EEE, MMM d · h:mm:ss a").withZone(ZoneId.systemDefault())
+    }
+    var detail by remember { mutableStateOf<TimelineRow?>(null) }
+
     val timeline = remember(doseLog, selectedDay, allMeds, timelineFilter) {
         val names = allMeds.associate { it.id to it.name }
         doseLog
             .filter { it.actedAt.atZone(zone).toLocalDate() == selectedDay }
             .filter { timelineFilter == null || it.status == timelineFilter }
             .sortedBy { it.actedAt }
-            .map { Triple(fmt.format(it.actedAt), names[it.medId] ?: "Medication", it.status) }
+            .map { TimelineRow(it, names[it.medId] ?: "Medication") }
     }
 
     val dueToday = remember(meds) {
@@ -165,6 +176,8 @@ fun TodayScreen(container: AppContainer) {
       DayTimeline(
         label = if (selectedDay == LocalDate.now()) "Today" else selectedDay.format(dayFmt),
         entries = timeline,
+        fmt = fmt,
+        onEntryClick = { detail = it },
         filter = timelineFilter,
         onFilterChange = { timelineFilter = it },
         onPrev = { selectedDay = selectedDay.minusDays(1) },
@@ -190,12 +203,57 @@ fun TodayScreen(container: AppContainer) {
             },
         )
     }
+
+    val openDetail = detail
+    if (openDetail != null) {
+        val e = openDetail.entry
+        AlertDialog(
+            onDismissRequest = { detail = null },
+            title = { Text(openDetail.medName) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    DetailRow(
+                        "Status",
+                        when (e.status) {
+                            DoseStatus.TAKEN -> "Taken"
+                            DoseStatus.SKIPPED -> "Skipped"
+                            DoseStatus.SNOOZED -> "Snoozed"
+                        },
+                    )
+                    DetailRow("Logged at", fullFmt.format(e.actedAt))
+                    DetailRow("Scheduled dose", fullFmt.format(e.scheduledFor))
+                    if (e.status == DoseStatus.SNOOZED) {
+                        DetailRow("Snooze until", fullFmt.format(e.actedAt.plusSeconds(10 * 60)))
+                    }
+                    if (e.pillsConsumed > 0) {
+                        DetailRow("Pills", e.pillsConsumed.toString())
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { detail = null }) { Text("Close") } },
+        )
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        Text(value, style = MaterialTheme.typography.bodySmall)
+    }
 }
 
 @Composable
 private fun DayTimeline(
     label: String,
-    entries: List<Triple<String, String, DoseStatus>>,
+    entries: List<TimelineRow>,
+    fmt: DateTimeFormatter,
+    onEntryClick: (TimelineRow) -> Unit,
     filter: DoseStatus?,
     onFilterChange: (DoseStatus?) -> Unit,
     onPrev: () -> Unit,
@@ -238,15 +296,19 @@ private fun DayTimeline(
             )
         } else {
           Column(Modifier.heightIn(max = 168.dp).verticalScroll(rememberScrollState())) {
-            entries.forEach { (time, name, status) ->
+            entries.forEach { row ->
+                val status = row.entry.status
                 Row(
-                    Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onEntryClick(row) }
+                        .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(time, style = MaterialTheme.typography.bodySmall)
+                    Text(fmt.format(row.entry.actedAt), style = MaterialTheme.typography.bodySmall)
                     Text(
-                        name,
+                        row.medName,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )

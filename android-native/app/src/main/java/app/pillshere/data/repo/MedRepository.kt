@@ -4,8 +4,6 @@ import app.pillshere.data.db.MedicationDao
 import app.pillshere.data.db.entities.Medication
 import kotlinx.coroutines.flow.Flow
 
-import app.pillshere.domain.Schedule
-
 class MedRepository(private val dao: MedicationDao) {
     fun observeActive(): Flow<List<Medication>> = dao.observeActive()
     fun observeAll(): Flow<List<Medication>> = dao.observeAll()

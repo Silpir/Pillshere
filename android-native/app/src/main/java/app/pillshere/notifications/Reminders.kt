@@ -21,10 +21,25 @@ class Reminders(private val context: Context) {
 
     fun scheduleNextWindow(med: Medication) {
         val times = Schedule.upcomingFireTimes(med)
-        for (at in times) scheduleOne(med.id, at)
+        if (!med.notificationsEnabled) {
+            for (at in times) {
+                cancel(med.id, at)
+                cancelMissedCheck(med.id, at)
+            }
+            return
+        }
+        for (at in times) scheduleOne(med.id, at, med.missedAfterMinutes.toLong())
     }
 
-    fun scheduleOne(medId: String, at: Instant) {
+    /** Cancels every pending alarm for this medication's upcoming window. */
+    fun cancelAll(med: Medication) {
+        for (at in Schedule.upcomingFireTimes(med.copy(archivedAt = null))) {
+            cancel(med.id, at)
+            cancelMissedCheck(med.id, at)
+        }
+    }
+
+    fun scheduleOne(medId: String, at: Instant, missedAfterMinutes: Long = MISSED_DELAY_MIN) {
         val pi = fireIntent(medId, at)
         val triggerMs = at.toEpochMilli()
         val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
@@ -33,15 +48,19 @@ class Reminders(private val context: Context) {
         } else {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMs, pi)
         }
-        scheduleMissedCheck(medId, at)
+        scheduleMissedCheck(medId, at, missedAfterMinutes)
     }
 
-    /** Fires a follow-up ~15 min after the scheduled time. If the user
+    /** Fires a follow-up N minutes after the scheduled time. If the user
      *  hasn't confirmed Taken/Skipped by then, a missed-dose notification
      *  is posted. */
-    fun scheduleMissedCheck(medId: String, at: Instant) {
+    fun scheduleMissedCheck(
+        medId: String,
+        at: Instant,
+        missedAfterMinutes: Long = MISSED_DELAY_MIN,
+    ) {
         val pi = missedIntent(medId, at)
-        val triggerMs = at.plusSeconds(MISSED_DELAY_MIN * 60L).toEpochMilli()
+        val triggerMs = at.plusSeconds(missedAfterMinutes.coerceAtLeast(1L) * 60L).toEpochMilli()
         val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
         if (canExact) {
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMs, pi)
@@ -92,5 +111,6 @@ class Reminders(private val context: Context) {
         const val EXTRA_MED_ID = "medId"
         const val EXTRA_SCHEDULED_FOR_MS = "scheduledForMs"
         const val MISSED_DELAY_MIN = 15L
+        val MISSED_DELAY_OPTIONS = listOf(5, 10, 15, 30, 60)
     }
 }

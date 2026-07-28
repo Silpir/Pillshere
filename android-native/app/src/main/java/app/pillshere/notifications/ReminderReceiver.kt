@@ -23,7 +23,9 @@ class ReminderReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val med = app.container.medRepository.byId(medId) ?: return@launch
-                postNotification(context, medId, med.name, scheduledForMs)
+                if (med.notificationsEnabled) {
+                    postNotification(context, medId, med.name, scheduledForMs)
+                }
                 // Schedule the next occurrence for this med.
                 app.container.reminders.scheduleNextWindow(med)
             } finally {

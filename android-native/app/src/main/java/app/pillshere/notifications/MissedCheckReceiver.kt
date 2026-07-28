@@ -31,6 +31,7 @@ class MissedCheckReceiver : BroadcastReceiver() {
                 val scheduledFor = Instant.ofEpochMilli(scheduledForMs)
                 if (app.container.doseRepository.wasActed(medId, scheduledFor)) return@launch
                 val med = app.container.medRepository.byId(medId) ?: return@launch
+                if (!med.notificationsEnabled) return@launch
                 val fmt = DateTimeFormatter.ofPattern("h:mm a").withZone(ZoneId.systemDefault())
                 val notifId = (medId.hashCode() * 31 + (scheduledForMs / 60_000L).toInt()) xor 0x4d495353
 

@@ -8,6 +8,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -22,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.pillshere.data.db.entities.Medication
 import app.pillshere.di.AppContainer
+import app.pillshere.notifications.Reminders
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalTime
@@ -41,6 +47,10 @@ fun MedEditScreen(
     var currentPills by remember { mutableStateOf("30") }
     var lowThreshold by remember { mutableStateOf("5") }
     var timesText by remember { mutableStateOf("08:00, 20:00") }
+    var notifyEnabled by remember { mutableStateOf(true) }
+    var missedAfter by remember { mutableStateOf(15) }
+    var createdAt by remember { mutableStateOf(Instant.now()) }
+    var confirmDelete by remember { mutableStateOf(false) }
     var loaded by remember { mutableStateOf(medId == null) }
 
     LaunchedEffect(medId) {
@@ -54,6 +64,9 @@ fun MedEditScreen(
                 timesText = m.times.joinToString(", ") {
                     it.format(DateTimeFormatter.ofPattern("HH:mm"))
                 }
+                notifyEnabled = m.notificationsEnabled
+                missedAfter = m.missedAfterMinutes
+                createdAt = m.createdAt
             }
             loaded = true
         }
@@ -83,6 +96,26 @@ fun MedEditScreen(
             label = { Text("Times (HH:mm, comma-separated)") },
         )
 
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Text("Send notifications", Modifier.weight(1f))
+            Switch(checked = notifyEnabled, onCheckedChange = { notifyEnabled = it })
+        }
+        Text(
+            "Remind me if not confirmed after",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Reminders.MISSED_DELAY_OPTIONS.forEach { minutes ->
+                FilterChip(
+                    selected = missedAfter == minutes,
+                    enabled = notifyEnabled,
+                    onClick = { missedAfter = minutes },
+                    label = { Text("${minutes}m") },
+                )
+            }
+        }
+
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
                 val parsedTimes = timesText
@@ -99,16 +132,43 @@ fun MedEditScreen(
                     currentPills = currentPills.toIntOrNull() ?: 0,
                     lowSupplyThreshold = lowThreshold.toIntOrNull() ?: 0,
                     times = parsedTimes,
-                    createdAt = Instant.now(),
+                    createdAt = createdAt,
                     archivedAt = null,
+                    notificationsEnabled = notifyEnabled,
+                    missedAfterMinutes = missedAfter,
                 )
                 scope.launch {
+                    container.reminders.cancelAll(med)
                     container.medRepository.upsert(med)
                     container.reminders.scheduleNextWindow(med)
                     onDone()
                 }
             }) { Text("Save") }
             OutlinedButton(onClick = onDone) { Text("Cancel") }
+            if (medId != null) {
+                TextButton(onClick = { confirmDelete = true }) { Text("Delete") }
+            }
         }
+    }
+
+    if (confirmDelete && medId != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete medication?") },
+            text = { Text("This removes ${name.ifBlank { "this medication" }} and its logged history.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    scope.launch {
+                        container.medRepository.byId(medId)?.let {
+                            container.reminders.cancelAll(it)
+                            container.medRepository.delete(it)
+                        }
+                        onDone()
+                    }
+                }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+        )
     }
 }

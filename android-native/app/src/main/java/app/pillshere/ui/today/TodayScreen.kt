@@ -97,6 +97,7 @@ fun TodayScreen(container: AppContainer) {
     // accidental double-tap.
     var pending by remember { mutableStateOf<DueDose?>(null) }
     var warning by remember { mutableStateOf<String?>(null) }
+    var pendingDelete by remember { mutableStateOf<Medication?>(null) }
 
     fun onTakenTapped(due: DueDose) {
         scope.launch {
@@ -144,6 +145,7 @@ fun TodayScreen(container: AppContainer) {
                                 container.reminders.cancelMissedCheck(d.med.id, d.at)
                             }
                         },
+                        onRemove = { d -> pendingDelete = d.med },
                         modifier = Modifier.fillMaxWidth().weight(1f),
                     )
                 }
@@ -165,6 +167,7 @@ fun TodayScreen(container: AppContainer) {
                                 container.reminders.cancelMissedCheck(d.med.id, d.at)
                             }
                         },
+                        onRemove = { d -> pendingDelete = d.med },
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -230,6 +233,26 @@ fun TodayScreen(container: AppContainer) {
                 }
             },
             confirmButton = { TextButton(onClick = { detail = null }) { Text("Close") } },
+        )
+    }
+
+    val removeTarget = pendingDelete
+    if (removeTarget != null) {
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text("Remove ${removeTarget.name}?") },
+            text = { Text("This deletes the medication, its reminders, and its logged history.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingDelete = null
+                    scope.launch {
+                        container.reminders.cancelAll(removeTarget)
+                        container.medRepository.delete(removeTarget)
+                        Toast.makeText(context, "Medication removed", Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text("Remove") }
+            },
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Cancel") } },
         )
     }
 }
@@ -338,6 +361,7 @@ private fun DueDoseCard(
     fmt: DateTimeFormatter,
     onTaken: (DueDose) -> Unit,
     onSkip: (DueDose) -> Unit,
+    onRemove: (DueDose) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val taken = remember(doseLog, due) {
@@ -378,6 +402,7 @@ private fun DueDoseCard(
             ) {
                 Button(enabled = !taken, onClick = { onTaken(due) }) { Text("Taken") }
                 OutlinedButton(enabled = !taken, onClick = { onSkip(due) }) { Text("Skip") }
+                TextButton(onClick = { onRemove(due) }) { Text("Remove") }
             }
         }
     }

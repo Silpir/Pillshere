@@ -70,6 +70,8 @@ class BackupManager(private val context: Context, private val db: PillshereDb) {
         put("lowSupplyThreshold", m.lowSupplyThreshold)
         put("times", JSONArray().also { arr -> m.times.forEach { arr.put(it.format(hhmm)) } })
         put("createdAt", m.createdAt.toString())
+        put("notificationsEnabled", m.notificationsEnabled)
+        put("missedAfterMinutes", m.missedAfterMinutes)
         m.archivedAt?.let { put("archivedAt", it.toString()) }
     }
 
@@ -86,6 +88,8 @@ class BackupManager(private val context: Context, private val db: PillshereDb) {
             lowSupplyThreshold = o.optInt("lowSupplyThreshold", 0),
             times = times,
             createdAt = Instant.parse(o.getString("createdAt")),
+            notificationsEnabled = o.optBoolean("notificationsEnabled", true),
+            missedAfterMinutes = o.optInt("missedAfterMinutes", 15),
             archivedAt = if (o.has("archivedAt") && !o.isNull("archivedAt"))
                 Instant.parse(o.getString("archivedAt")) else null,
         )

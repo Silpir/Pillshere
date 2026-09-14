@@ -8,11 +8,6 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "android:web": "vite build --config vite.capacitor.config.ts",
-    "android:add": "bun run android:web && cap add android && cap sync android && node scripts/patch-android-gradle.mjs && node scripts/verify-android-config.mjs",
-    "android:sync": "bun run android:web && cap sync android && node scripts/patch-android-gradle.mjs && node scripts/verify-android-config.mjs",
-    "android:verify": "node scripts/verify-android-config.mjs",
-    "android:open": "cap open android",
     "android:check-env": "node scripts/check-android-env.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."

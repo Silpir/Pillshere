@@ -94,5 +94,14 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.12",
+    "brace-expansion": "^5.0.9",
+    "browserslist": "^4.28.7",
+    "js-yaml": "^4.3.2",
+    "nanoid": "^3.3.18",
+    "postcss": "^8.5.18",
+    "tar": "^7.5.21"
   }
 }

@@ -1,11 +1,21 @@
 # Pillshere
 
-Lightweight, local-first medication reminder & adherence tracker for Android.
-All data lives on-device (Room / SQLite) — no accounts, no backend, no cloud.
+I'm horrible at taking pills regularly, so I needed some help with reminders and refills. 
+This is a personal experiment with making something with local LLM and Cline agentic coding setup. 
+All data lives on-device and there's no cloud components.
 
 > The web/Capacitor build has been retired. The app is now a native Android
 > project under [`android-native/`](./android-native). Legacy web sources in
 > `src/` remain only as reference and are not shipped.
+
+## TO-DO
+
+- Clean up all legacy web/capacity build leftovers
+- Better UI
+- Simpler confirmation with working alarm system
+- Android notification integration
+- More automation with refill
+- Better statistics & history visualisation
 
 ## Features
 

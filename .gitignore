@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local Android dev artifacts
+android-native/build-log.txt
+android-native/local.properties*

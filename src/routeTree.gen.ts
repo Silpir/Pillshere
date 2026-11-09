@@ -9,24 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as MedsRouteImport } from './routes/meds'
-import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as MedsRouteImport } from './routes/meds'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ApiExportRouteImport } from './routes/api/export'
 import { Route as MedsIndexRouteImport } from './routes/meds.index'
 import { Route as MedsNewRouteImport } from './routes/meds.new'
-import { Route as ApiExportRouteImport } from './routes/api/export'
-import { Route as OauthGoogleCallbackRouteImport } from './routes/oauth.google.callback'
 import { Route as MedsIdEditRouteImport } from './routes/meds.$id.edit'
+import { Route as OauthGoogleCallbackRouteImport } from './routes/oauth.google.callback'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MedsRoute = MedsRouteImport.update({
-  id: '/meds',
-  path: '/meds',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -34,9 +29,19 @@ const HistoryRoute = HistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const MedsRoute = MedsRouteImport.update({
+  id: '/meds',
+  path: '/meds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExportRoute = ApiExportRouteImport.update({
+  id: '/api/export',
+  path: '/api/export',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MedsIndexRoute = MedsIndexRouteImport.update({
@@ -49,20 +54,15 @@ const MedsNewRoute = MedsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => MedsRoute,
 } as any)
-const ApiExportRoute = ApiExportRouteImport.update({
-  id: '/api/export',
-  path: '/api/export',
-  getParentRoute: () => rootRouteImport,
+const MedsIdEditRoute = MedsIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => MedsRoute,
 } as any)
 const OauthGoogleCallbackRoute = OauthGoogleCallbackRouteImport.update({
   id: '/oauth/google/callback',
   path: '/oauth/google/callback',
   getParentRoute: () => rootRouteImport,
-} as any)
-const MedsIdEditRoute = MedsIdEditRouteImport.update({
-  id: '/$id/edit',
-  path: '/$id/edit',
-  getParentRoute: () => MedsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -144,18 +144,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/meds': {
-      id: '/meds'
-      path: '/meds'
-      fullPath: '/meds'
-      preLoaderRoute: typeof MedsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -165,11 +158,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/meds': {
+      id: '/meds'
+      path: '/meds'
+      fullPath: '/meds'
+      preLoaderRoute: typeof MedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/export': {
+      id: '/api/export'
+      path: '/api/export'
+      fullPath: '/api/export'
+      preLoaderRoute: typeof ApiExportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meds/': {
@@ -186,12 +193,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedsNewRouteImport
       parentRoute: typeof MedsRoute
     }
-    '/api/export': {
-      id: '/api/export'
-      path: '/api/export'
-      fullPath: '/api/export'
-      preLoaderRoute: typeof ApiExportRouteImport
-      parentRoute: typeof rootRouteImport
+    '/meds/$id/edit': {
+      id: '/meds/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/meds/$id/edit'
+      preLoaderRoute: typeof MedsIdEditRouteImport
+      parentRoute: typeof MedsRoute
     }
     '/oauth/google/callback': {
       id: '/oauth/google/callback'
@@ -199,13 +206,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/oauth/google/callback'
       preLoaderRoute: typeof OauthGoogleCallbackRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/meds/$id/edit': {
-      id: '/meds/$id/edit'
-      path: '/$id/edit'
-      fullPath: '/meds/$id/edit'
-      preLoaderRoute: typeof MedsIdEditRouteImport
-      parentRoute: typeof MedsRoute
     }
   }
 }

@@ -24,7 +24,7 @@ jobs:
       # Scans android-native/gradle/libs.versions.toml (Kotlin version catalog),
       # build files, and any other recognizable manifests found under ./
       - name: OSV Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@v2.0.2
+        uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
         with:
           scan-args: |-
             --recursive

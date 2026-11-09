@@ -15,42 +15,14 @@ permissions:
   security-events: write
 
 jobs:
-  audit:
-    name: Dependency Audit
+  osv-scan:
+    name: OSV Dependency Scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Install dependencies (frozen lockfile)
-        run: bun install --frozen-lockfile
-
-      - name: bun audit (fail on high/critical)
-        run: bun audit --prod --audit-level=high
-
-      - name: Generate package-lock.json for npm audit
-        run: npm install --package-lock-only --ignore-scripts
-
-      - name: npm audit JSON report
-        run: npm audit --omit=dev --audit-level=high --json > npm-audit.json || true
-
-      - name: Upload npm audit report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-audit-report
-          path: npm-audit.json
-          if-no-files-found: ignore
-
+      # Scans android-native/gradle/libs.versions.toml (Kotlin version catalog),
+      # build files, and any other recognizable manifests found under ./
       - name: OSV Scanner
         uses: google/osv-scanner-action/osv-scanner-action@v2.0.2
         with:
@@ -58,6 +30,7 @@ jobs:
             --recursive
             --skip-git
             ./
+
 
   codeql:
     name: CodeQL Static Analysis

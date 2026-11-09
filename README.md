@@ -4,13 +4,12 @@ I'm horrible at taking pills regularly, so I needed some help with reminders and
 This is a personal experiment with making something with local LLM and Cline agentic coding setup. 
 All data lives on-device and there's no cloud components.
 
-> The web/Capacitor build has been retired. The app is now a native Android
-> project under [`android-native/`](./android-native). Legacy web sources in
-> `src/` remain only as reference and are not shipped.
+> The web/Capacitor build has been fully retired and its sources deleted from
+> the repo (recoverable via git history / old tags). Everything that ships is
+> the native Android project under [`android-native/`](./android-native).
 
 ## TO-DO
 
-- Clean up all legacy web/capacity build leftovers
 - Better UI
 - Simpler confirmation with working alarm system
 - Android notification integration

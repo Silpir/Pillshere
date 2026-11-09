@@ -1,1 +1,0 @@
-export { isNative } from "@/lib/platform";

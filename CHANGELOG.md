@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-09
+
+### Removed
+- Legacy TanStack Start reference build (`src/`, Vite config, npm/Bun dependency graph) and all remaining Capacitor remnants (no-op platform shims, WebView workarounds, `scripts/build-capacitor-web.mjs`)
+- Repo is now a pure native Android project under `android-native/`; deleted sources remain recoverable via git history and older tags
+
+### Changed
+- Rewrote security CI for Gradle (OSV Scanner on version catalog + Gitleaks secret scan); dependabot now tracks the `gradle` ecosystem in `/android-native` instead of root npm
+- Aligned app `versionName`/`versionCode` with repository tag scheme (v0.x.y)
+
 ## [0.1.0] - 2026-11-09
 
 ### Added

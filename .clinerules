@@ -1,0 +1,26 @@
+# Project
+- Pure native Android app (Android only): Kotlin + Jetpack Compose, single Gradle module :app under android-native/. No React Native / Node / Metro involved.
+- Stack versions (see gradle/libs.versions.toml): Gradle 8.9 wrapper, AGP 8.7.2, Kotlin 2.0.21 (+ kotlin.compose plugin), KSP 2.0.21-1.0.28, Java/JVM target 17, compileSdk/targetSdk 35, minSdk 26, Compose BOM 2024.11.00 (~1.7.x foundation/material3). Room 2.6.1 via KSP, Navigation Compose 2.8.4, DataStore Preferences 1.1.1, Lifecycle 2.8.7, coroutines 1.9.0.
+- All source lives in android-native/app/src/main/java/app/pillshere/ (ui/, data/db/). DI is a hand-written AppContainer.kt — no Hilt/Koin; register new dependencies/migrations there.
+- Room: schema JSON exports to android-native/app/schemas/. On any DB change, bump the version and add MIGRATION_n_m in PillshereDb, then register it in AppContainer.
+
+# Environment
+- Windows, PowerShell only (no bash, no export, no &&; chain with ;).
+- Always quote paths containing spaces. Use backslashes in shell commands.
+- Run Gradle through the wrapper from android-native\ : .\gradlew.bat --no-daemon <task>.
+
+# Commands
+- Build debug APK: cd android-native; .\gradlew.bat assembleDebug
+- Fast compile check: cd android-native; .\gradlew.bat compileDebugKotlin
+- Clean: cd android-native; .\gradlew.bat clean
+- Lint: cd android-native; .\gradlew.bat lint
+- Unit tests: cd android-native; .\gradlew.bat testDebugUnitTest
+
+# Rules
+- Do not change AGP, Gradle, Kotlin, KSP, JDK, or Compose BOM versions without asking first.
+- Do not add or upgrade dependencies without asking; when approved, declare them in gradle/libs.versions.toml — never hardcode versions in build.gradle.kts files.
+- Do not edit generated or build folders (android-native/app/build, android-native/.gradle, ksp-generated code under app/build/generated/).
+- Keep changes small and scoped to the task. No unrelated refactors.
+- When debugging a build error, read the full error output first, change one thing at a time, and do not retry a fix that already failed. If an artifact looks corrupt, inspect it inside C:\Users\<user>\.gradle\caches\modules-2 before deleting any cache directory (deletion is destructive → ask first).
+- After changes, run the build or lint command and report the actual result, including failures.
+- Ask before deleting files or running anything destructive.

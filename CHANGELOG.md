@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
+### Added
+- Per-medication pill color coding: fixed 10-color palette (`ui/theme/Palette.kt`) with a swatch picker on the med edit screen; new meds auto-assigned the first unused slot. Colored identity dots on the Meds list and Today cards; Room schema bumped to v3 (`MIGRATION_2_3`) with exported JSON schemas now committed under `app/schemas/`
+
+### Changed
+- Typography increased by +2sp across all Material 3 text styles via a custom `Typography` passed into `MaterialTheme` (single source of truth, no per-screen edits)
+- Today screen cards are content-sized at natural height instead of stretching to fill when there are few doses; taken doses fade their tint from 0.30 → 0.12 alpha for subtle completion feedback while keeping hue recognition
+
+### Fixed
+- `Schedule.upcomingFireTimes` anchored its scan window to wall-clock "today" instead of the injected `now`, so deterministic/backfilled lookups silently returned nothing — now derived from `now`; caught by the previously never-run unit test suite
+
 ## [0.2.0] - 2026-11-09
 
 ### Removed

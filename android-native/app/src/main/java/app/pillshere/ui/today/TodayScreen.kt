@@ -1,11 +1,13 @@
 package app.pillshere.ui.today
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
@@ -125,35 +127,10 @@ fun TodayScreen(container: AppContainer) {
         if (dueToday.isEmpty()) {
             Text("Nothing scheduled in the next 24 hours.", Modifier.padding(top = 16.dp))
         } else {
-        // Few cards → let each card expand to fill the screen. Many cards →
-        // scroll at their natural size. `weight` inside LazyColumn is not
-        // valid, so switch containers.
-        if (dueToday.size <= 2) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 12.dp).fillMaxSize(),
-            ) {
-                dueToday.forEach { due ->
-                    DueDoseCard(
-                        due = due,
-                        doseLog = doseLog,
-                        fmt = fmt,
-                        onTaken = ::onTakenTapped,
-                        onSkip = { d ->
-                            scope.launch {
-                                container.doseRepository.recordSkipped(d.med.id, d.at)
-                                container.reminders.cancelMissedCheck(d.med.id, d.at)
-                            }
-                        },
-                        onRemove = { d -> pendingDelete = d.med },
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                    )
-                }
-            }
-        } else {
+            // Cards keep their natural height; only scroll when they overflow.
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(top = 12.dp).fillMaxSize(),
             ) {
                 items(dueToday) { due ->
                     DueDoseCard(
@@ -172,7 +149,6 @@ fun TodayScreen(container: AppContainer) {
                     )
                 }
             }
-        }
         }
       }
       DayTimeline(
@@ -371,12 +347,18 @@ private fun DueDoseCard(
                 it.status == DoseStatus.TAKEN
         }
     }
-    val cardColors = if (taken) {
-        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-    } else CardDefaults.cardColors()
+    // Cards are always tinted with the med's palette color; taken doses fade back.
+    val cardColors = CardDefaults.cardColors(
+        containerColor = app.pillshere.ui.theme.Palette.tint(due.med.colorIndex, if (taken) 0.12f else 0.30f),
+    )
     Card(modifier, colors = cardColors) {
-        Column(Modifier.padding(12.dp).fillMaxSize()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    Modifier
+                        .size(14.dp)
+                        .background(app.pillshere.ui.theme.Palette.color(due.med.colorIndex), shape = androidx.compose.foundation.shape.RoundedCornerShape(7.dp)),
+                )
                 Text(
                     due.med.name,
                     style = MaterialTheme.typography.titleMedium,
@@ -394,7 +376,6 @@ private fun DueDoseCard(
                 }
             }
             Text("${due.med.dosageText}  ·  ${fmt.format(due.at)}")
-            Spacer(Modifier.weight(1f))
             Row(
                 Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

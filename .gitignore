@@ -33,4 +33,5 @@ dist-ssr
 
 # Local Android dev artifacts
 android-native/build-log.txt
+android-native/build*.txt
 android-native/local.properties*

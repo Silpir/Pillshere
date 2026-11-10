@@ -10,7 +10,7 @@ import app.pillshere.data.db.entities.Medication
 
 @Database(
     entities = [Medication::class, DoseLog::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -26,6 +26,14 @@ abstract class PillshereDb : RoomDatabase() {
                 )
                 db.execSQL(
                     "ALTER TABLE medications ADD COLUMN missedAfterMinutes INTEGER NOT NULL DEFAULT 15"
+                )
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE medications ADD COLUMN colorIndex INTEGER NOT NULL DEFAULT -1"
                 )
             }
         }

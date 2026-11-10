@@ -24,10 +24,11 @@ object Schedule {
         zone: ZoneId = ZoneId.systemDefault(),
     ): List<Instant> {
         if (med.archivedAt != null || med.times.isEmpty()) return emptyList()
-        val today = LocalDate.now(zone)
         val end = now.plusSeconds(windowHours * 3600)
+        // Anchor on the day containing [now] (not wall-clock "today") so callers
+        // can inject deterministic instants for tests or backfills.
+        var day = LocalDate.ofInstant(now, zone)
         val out = mutableListOf<Instant>()
-        var day = today
         while (true) {
             for (t in med.times) {
                 val at = LocalDateTime.of(day, t).atZone(zone).toInstant()

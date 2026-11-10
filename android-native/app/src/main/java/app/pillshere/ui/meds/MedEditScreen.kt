@@ -1,10 +1,17 @@
 package app.pillshere.ui.meds
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -28,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import app.pillshere.data.db.entities.Medication
 import app.pillshere.di.AppContainer
 import app.pillshere.notifications.Reminders
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalTime
@@ -52,6 +60,7 @@ fun MedEditScreen(
     var createdAt by remember { mutableStateOf(Instant.now()) }
     var confirmDelete by remember { mutableStateOf(false) }
     var loaded by remember { mutableStateOf(medId == null) }
+    var colorIndex by remember { mutableStateOf(-1) }
 
     LaunchedEffect(medId) {
         if (medId != null) {
@@ -67,8 +76,13 @@ fun MedEditScreen(
                 notifyEnabled = m.notificationsEnabled
                 missedAfter = m.missedAfterMinutes
                 createdAt = m.createdAt
+                colorIndex = m.colorIndex
             }
             loaded = true
+        } else {
+            // New med: take the first palette slot no active medication uses yet.
+            val used = container.medRepository.observeAll().first().map { it.colorIndex }.toSet()
+            colorIndex = (0 until app.pillshere.ui.theme.Palette.Colors.size).firstOrNull { it !in used } ?: 0
         }
     }
 
@@ -95,6 +109,23 @@ fun MedEditScreen(
             onValueChange = { timesText = it },
             label = { Text("Times (HH:mm, comma-separated)") },
         )
+
+        Text("Pill color")
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            app.pillshere.ui.theme.Palette.Colors.forEachIndexed { i, c ->
+                Box(
+                    Modifier
+                        .size(34.dp)
+                        .then(if (colorIndex == i) {
+                            Modifier.border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(17.dp))
+                        } else {
+                            Modifier
+                        })
+                        .background(c, RoundedCornerShape(17.dp))
+                        .clickable { colorIndex = i },
+                )
+            }
+        }
 
         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Text("Send notifications", Modifier.weight(1f))
@@ -136,6 +167,7 @@ fun MedEditScreen(
                     archivedAt = null,
                     notificationsEnabled = notifyEnabled,
                     missedAfterMinutes = missedAfter,
+                    colorIndex = colorIndex,
                 )
                 scope.launch {
                     container.reminders.cancelAll(med)

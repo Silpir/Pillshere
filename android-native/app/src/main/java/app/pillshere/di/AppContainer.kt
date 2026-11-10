@@ -21,7 +21,7 @@ class AppContainer(context: Context) {
         appContext,
         PillshereDb::class.java,
         "pillshere.db",
-    ).addMigrations(PillshereDb.MIGRATION_1_2).build()
+    ).addMigrations(PillshereDb.MIGRATION_1_2, PillshereDb.MIGRATION_2_3).build()
 
     val medRepository = MedRepository(db.medicationDao())
     val doseRepository = DoseRepository(db.doseLogDao(), db.medicationDao())

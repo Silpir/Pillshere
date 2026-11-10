@@ -21,4 +21,6 @@ data class Medication(
     val notificationsEnabled: Boolean = true,
     /** Minutes after the scheduled time before a missed-dose alert fires. */
     val missedAfterMinutes: Int = 15,
+    /** Index into ui.theme.Palette.Colors; -1 (auto-assigned on save) means none chosen yet. */
+    val colorIndex: Int = -1,
 )

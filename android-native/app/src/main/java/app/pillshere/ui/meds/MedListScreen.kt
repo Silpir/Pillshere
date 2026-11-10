@@ -1,11 +1,13 @@
 package app.pillshere.ui.meds
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -60,7 +62,12 @@ fun MedListScreen(
                                 .clickable { onEdit(med.id) },
                         ) {
                             Column(Modifier.padding(12.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Box(
+                                        Modifier
+                                            .size(14.dp)
+                                            .background(app.pillshere.ui.theme.Palette.color(med.colorIndex), shape = androidx.compose.foundation.shape.RoundedCornerShape(7.dp)),
+                                    )
                                     Text(
                                         med.name,
                                         style = MaterialTheme.typography.titleMedium,

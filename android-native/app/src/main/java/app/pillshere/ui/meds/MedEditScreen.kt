@@ -32,8 +32,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import app.pillshere.data.db.entities.Medication
 import app.pillshere.di.AppContainer
+import app.pillshere.notifications.NotificationPermissions
 import app.pillshere.notifications.Reminders
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -61,6 +66,12 @@ fun MedEditScreen(
     var confirmDelete by remember { mutableStateOf(false) }
     var loaded by remember { mutableStateOf(medId == null) }
     var colorIndex by remember { mutableStateOf(-1) }
+    val context = LocalContext.current
+    var permAsked by remember { mutableStateOf(false) }
+    var showPermDialog by remember { mutableStateOf(false) }
+    val notifPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {}
 
     LaunchedEffect(medId) {
         if (medId != null) {
@@ -87,6 +98,37 @@ fun MedEditScreen(
     }
 
     if (!loaded) return
+
+    // Shared save path so both direct taps and "save anyway" from the
+    // permission dialog below behave identically.
+    val doSave: () -> Unit = {
+        val parsedTimes = timesText
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .mapNotNull { runCatching { LocalTime.parse(it, DateTimeFormatter.ofPattern("HH:mm")) }.getOrNull() }
+        val id = medId ?: UUID.randomUUID().toString()
+        val med = Medication(
+            id = id,
+            name = name.trim(),
+            dosageText = dosageText.trim(),
+            pillsPerDose = pillsPerDose.toIntOrNull() ?: 1,
+            currentPills = currentPills.toIntOrNull() ?: 0,
+            lowSupplyThreshold = lowThreshold.toIntOrNull() ?: 0,
+            times = parsedTimes,
+            createdAt = createdAt,
+            archivedAt = null,
+            notificationsEnabled = notifyEnabled,
+            missedAfterMinutes = missedAfter,
+            colorIndex = colorIndex,
+        )
+        scope.launch {
+            container.reminders.cancelAll(med)
+            container.medRepository.upsert(med)
+            container.reminders.scheduleNextWindow(med)
+            onDone()
+        }
+    }
 
     Column(
         Modifier
@@ -129,7 +171,16 @@ fun MedEditScreen(
 
         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Text("Send notifications", Modifier.weight(1f))
-            Switch(checked = notifyEnabled, onCheckedChange = { notifyEnabled = it })
+            Switch(
+                checked = notifyEnabled,
+                onCheckedChange = { newValue ->
+                    notifyEnabled = newValue
+                    if (newValue && !permAsked && !NotificationPermissions.isGranted(context)) {
+                        permAsked = true
+                        notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                },
+            )
         }
         Text(
             "Remind me if not confirmed after",
@@ -149,31 +200,10 @@ fun MedEditScreen(
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
-                val parsedTimes = timesText
-                    .split(",")
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
-                    .mapNotNull { runCatching { LocalTime.parse(it, DateTimeFormatter.ofPattern("HH:mm")) }.getOrNull() }
-                val id = medId ?: UUID.randomUUID().toString()
-                val med = Medication(
-                    id = id,
-                    name = name.trim(),
-                    dosageText = dosageText.trim(),
-                    pillsPerDose = pillsPerDose.toIntOrNull() ?: 1,
-                    currentPills = currentPills.toIntOrNull() ?: 0,
-                    lowSupplyThreshold = lowThreshold.toIntOrNull() ?: 0,
-                    times = parsedTimes,
-                    createdAt = createdAt,
-                    archivedAt = null,
-                    notificationsEnabled = notifyEnabled,
-                    missedAfterMinutes = missedAfter,
-                    colorIndex = colorIndex,
-                )
-                scope.launch {
-                    container.reminders.cancelAll(med)
-                    container.medRepository.upsert(med)
-                    container.reminders.scheduleNextWindow(med)
-                    onDone()
+                if (notifyEnabled && !NotificationPermissions.isGranted(context)) {
+                    showPermDialog = true
+                } else {
+                    doSave()
                 }
             }) { Text("Save") }
             OutlinedButton(onClick = onDone) { Text("Cancel") }
@@ -201,6 +231,29 @@ fun MedEditScreen(
                 }) { Text("Delete") }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+        )
+    }
+
+    if (showPermDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermDialog = false; doSave() },
+            title = { Text("Notifications are off") },
+            text = {
+                Text(
+                    "Reminders need notification access to alert you at dose time. " +
+                        "Doses will still be scheduled in the meantime — enable notifications " +
+                        "in system settings so they can fire.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    NotificationPermissions.openAppSettings(context)
+                    showPermDialog = false
+                }) { Text("Open Settings") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPermDialog = false; doSave() }) { Text("Continue") }
+            },
         )
     }
 }

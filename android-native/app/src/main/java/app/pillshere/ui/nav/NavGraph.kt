@@ -1,5 +1,8 @@
 package app.pillshere.ui.nav
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -11,13 +14,17 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.pillshere.di.AppContainer
+import app.pillshere.notifications.NotificationPermissions
+import kotlinx.coroutines.flow.first
 import app.pillshere.ui.history.HistoryScreen
 import app.pillshere.ui.meds.MedEditScreen
 import app.pillshere.ui.meds.MedListScreen
@@ -39,6 +46,21 @@ fun PillshereNav(container: AppContainer) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val currentRoute = entry?.destination?.route
+
+    // Ask for POST_NOTIFICATIONS once per install on Android 13+ so reminders
+    // actually fire; afterwards the med-edit screen handles re-prompts.
+    val context = LocalContext.current
+    val notifPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {}
+    LaunchedEffect(Unit) {
+        if (!NotificationPermissions.isGranted(context)) {
+            if (container.settings.notifPermPrompted.first().not()) {
+                container.settings.setNotifPermPrompted(true)
+                notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     val tabs = listOf(
         TopDest(Routes.TODAY, "Today") { Icon(Icons.Filled.Today, contentDescription = null) },

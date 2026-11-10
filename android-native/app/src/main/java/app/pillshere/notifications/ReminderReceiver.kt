@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import app.pillshere.MainActivity
 import app.pillshere.PillshereApp
 import app.pillshere.R
 import kotlinx.coroutines.CoroutineScope
@@ -57,11 +58,19 @@ class ReminderReceiver : BroadcastReceiver() {
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         val takenPi = PendingIntent.getBroadcast(context, notifId * 2, takenIntent, flags)
         val snoozePi = PendingIntent.getBroadcast(context, notifId * 2 + 1, snoozeIntent, flags)
+        // Tapping the notification body opens the app on its default Today tab.
+        val contentPi = PendingIntent.getActivity(
+            context,
+            notifId * 2 + 4,
+            Intent(context, MainActivity::class.java),
+            flags,
+        )
 
         val n = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(medName)
             .setContentText("Time to take your medication")
+            .setContentIntent(contentPi)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Runtime `POST_NOTIFICATIONS` handling on Android 13+: one-time ask on first open, immediate ask when flipping Reminders ON in med editing, and a save-time interstitial offering a deep link into system settings if permission was declined
+- Reminder notifications now open the app (Today tab) when their body is tapped, instead of only dismissing
+
 ## [0.3.0] - 2026-11-09
 
 ### Added
